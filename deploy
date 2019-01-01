@@ -1,2 +1,2 @@
-cat cloud.dhall | (echo -n "(" && cat && echo ").terraformConfig") | dhall-to-json --pretty
-# terraform apply
+cat cloud.dhall | (echo -n "(" && cat && echo ").terraformConfig") | dhall-to-text > cloud.tf \
+  && terraform apply

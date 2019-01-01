@@ -1,9 +1,11 @@
 provider "aws" {
   region  = "eu-west-2"
   version = "= 1.54.0"
-
   # shared_credentials_file = "/Users/Hoglund/.aws/credentials"
   profile = "dev"
+}
+provider "null" {
+  version = "= 1.0"
 }
 
 resource "aws_instance" "http-server" {
@@ -16,16 +18,18 @@ resource "aws_instance" "http-server" {
   tags {
     Name = "http-server"
   }
-
-
-
+}
+resource "null_resource" "http-server-prov" {
+  triggers {
+    build_number = "${timestamp()}" # Always run
+  }
   # For all provisioners
   connection {
     type = "ssh"
     user = "root"
+    host = "${element(aws_instance.http-server.*.public_ip, 0)}"
     private_key = "${file("~/.aws/admin-key.pem")}"
   }
-
 
   # Copy NixOS config file
   provisioner "file" {

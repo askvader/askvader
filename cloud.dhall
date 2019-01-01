@@ -80,7 +80,8 @@ let awsNix = \(name : Text) -> AwsInstance name in -- TODO
 
     // Copy NixOS config file
     provisioner "file" {
-      source      = "http-server.nix"
+      // TODO this name is hardcoded in ./deploy
+      source      = "cloud.nix"
       destination = "/etc/nixos/configuration.nix"
     }
     // TODO mkdir /var/www/blog
@@ -104,5 +105,21 @@ let awsNix = \(name : Text) -> AwsInstance name in -- TODO
   }
 
   ''
-, nixConfig = [ "TODO" ]
+, nixConfig =
+  { networking = {
+    firewall = {
+        enable = False
+      -- allowedTCPPorts = [ 8081 ];
+      }
+    }
+  , services = { nginx = {
+      enable = True
+    , virtualHosts = { blog = {
+    --  enableACME = true;
+      root = "/var/www/blog"
+    }}
+    }
+  }
+  }
+
 }

@@ -107,9 +107,9 @@ let awsNix = \(name : Text) -> AwsInstance name in -- TODO
   ''
 , nixConfig =
   { networking = {
-    firewall = {
-        enable = False
-      -- allowedTCPPorts = [ 8081 ];
+    firewall =
+      { enable = True
+      , allowedTCPPorts = [ 80 ]
       }
     }
   , services = { nginx = {

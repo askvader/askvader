@@ -11,8 +11,8 @@ provider "null" {
 resource "aws_instance" "http-server" {
   # AMI from https://nixos.org/nixos/download.html
   ami             = "ami-0dada3805ce43c55e"
-  # instance_type = "t2.micro"
-  instance_type   = "t2.medium"
+  instance_type   = "t2.micro"
+  # instance_type   = "t2.medium"
   key_name        = "admin"
 
   tags {

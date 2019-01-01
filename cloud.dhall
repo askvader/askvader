@@ -1,9 +1,13 @@
 
 -- TODO pin prelude
 let keyValue =
-        https://prelude.dhall-lang.org/JSON/keyValue
-in
--- Literal translation of terraform + nix file
+        https://prelude.dhall-lang.org/JSON/keyValue in
+let concat =
+        https://prelude.dhall-lang.org/List/concat in
+
+
+
+-- More or less literal translation of terraform + nix file
 -- TODO come up with something more high-level
 
 let AwsR =
@@ -13,8 +17,14 @@ let AwsR =
   } in
 let NullR =
   { version : Text } in
-let Null = \(x : NullR) -> <Aws : { aws : List AwsR } | Null = { null = [x] } > in
-let Aws = \(x : AwsR) -> <Aws = { aws = [x] } | Null : { null : List NullR }> in
+let Null = \(x : NullR) ->
+  < Aws : { aws : List AwsR }
+  | Null = { null = [x] }
+  > in
+let Aws = \(x : AwsR) ->
+  < Aws = { aws = [x] }
+  | Null : { null : List NullR }
+  > in
 
 let AwsInstanceR =
   { ami : Text
@@ -22,9 +32,12 @@ let AwsInstanceR =
   , key_name : Text
   } in
 let AwsInstance = \(name : Text) -> \(x : AwsInstanceR) ->
-  { aws_instance =
-    [ [ { mapKey = name, mapValue = [ x /\ { tags = [{Name=name}] } ] } ] ]
-  }  in
+  < AwsInstance =
+    { aws_instance =
+    [ [{ mapKey = name, mapValue = [ x /\ { tags = [{Name=name}] } ] }] ]
+    }
+  | NullResource : {}
+  >  in
 
 { terraformConfig = { provider =
     [ Aws { profile = "dev", region = "eu-west-2", version = "= 1.54.0" }
@@ -38,5 +51,5 @@ let AwsInstance = \(name : Text) -> \(x : AwsInstanceR) ->
       }
     ]
   }
-, nixConfig = "TODO"
+, nixConfig = [ "TODO" ]
 }

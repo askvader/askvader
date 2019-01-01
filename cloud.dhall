@@ -5,7 +5,8 @@ let keyValue =
 let concat =
         https://prelude.dhall-lang.org/List/concat in
 
-
+-- let Dict = \(a : Type) -> List { mapKey : Text, mapValue : a } in
+-- let JSON = <A : List JSON | O : Dict JSON | N : Natural | S : Text > in
 
 -- More or less literal translation of terraform + nix file
 -- TODO come up with something more high-level
@@ -38,6 +39,7 @@ let AwsInstance = \(name : Text) -> \(x : AwsInstanceR) ->
     }
   | NullResource : {}
   >  in
+let awsNix = \(name : Text) -> AwsInstance name in -- TODO
 
 { terraformConfig = { provider =
     [ Aws { profile = "dev", region = "eu-west-2", version = "= 1.54.0" }
@@ -49,6 +51,7 @@ let AwsInstance = \(name : Text) -> \(x : AwsInstanceR) ->
       , instance_type = "t2.micro"
       , key_name = "admin"
       }
+    -- , awsNix "http-server"
     ]
   }
 , nixConfig = [ "TODO" ]

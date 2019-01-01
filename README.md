@@ -14,4 +14,8 @@
 
     cd <THIS DIR>
     terraform init
-    terraform apply
+    ./deploy
+
+- Undeploy
+
+    terraform destroy

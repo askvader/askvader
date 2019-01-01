@@ -9,12 +9,14 @@ let AwsR =
   } in
 let NullR =
   { version : Text } in
-let Null = \(x : NullR) -> <Aws : { aws : List AwsR } | Null = x > in
-let Aws = \(x : AwsR) -> <Aws = { aws = [x] } | Null : NullR> in
+let Null = \(x : NullR) -> <Aws : { aws : List AwsR } | Null = { null = [x] } > in
+let Aws = \(x : AwsR) -> <Aws = { aws = [x] } | Null : { null : List NullR }> in
 
-{ provider =
-  [ Aws { profile = "dev", region = "eu-west-2", version = "= 1.54.0" }
-  , Null { version = "= 1.0" }
-  ]
-  , resource = "TODO"
+{ terraformConfig = { provider =
+    [ Aws { profile = "dev", region = "eu-west-2", version = "= 1.54.0" }
+    , Null { version = "= 1.0" }
+    ]
+    , resource = "TODO"
+  }
+, nixConfig = "TODO"
 }

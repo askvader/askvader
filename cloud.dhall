@@ -1,4 +1,7 @@
 
+-- Literal translation of terraform + nix file
+-- TODO come up with something more high-level
+
 let AwsR =
   { profile : Text
   , region : Text

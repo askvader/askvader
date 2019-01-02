@@ -10,7 +10,7 @@
 
 
 -- Terraform providers used by the code we generate
--- Pinned and hardcoded for now
+-- Hardcoded for now
 let
 standardProviders =
   ''
@@ -25,8 +25,11 @@ standardProviders =
   ''
 in
 
+-- Standard AWS options
+-- Hardcoded for now
 let
 standardAwsOptions =
+  -- AMI from https://nixos.org/nixos/download.html
   { ami = "ami-0dada3805ce43c55e"
   , keyName = "admin"
   }
@@ -85,8 +88,7 @@ showAwsResource = \(res : AwsResource) ->
       in
           ''
           resource "aws_instance" "${name}" {
-            // AMI from https://nixos.org/nixos/download.html
-            ami             = "ami-0dada3805ce43c55e"
+            ami             = "${standardAwsOptions.ami}"
             instance_type   = "t2.micro"
             // instance_type   = "t2.medium"
             key_name        = "admin"
@@ -103,7 +105,7 @@ showAwsResource = \(res : AwsResource) ->
               type = "ssh"
               user = "root"
               host = "''${element(aws_instance.${name}.*.public_ip, 0)}"
-              private_key = "''${file("~/.aws/admin-key.pem")}"
+              private_key = "''${file("~/.aws/${standardAwsOptions.keyName}.pem")}"
             }
             provisioner "file" {
               // TODO this name is hardcoded in ./deploy

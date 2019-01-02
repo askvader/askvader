@@ -187,7 +187,7 @@ in
 
 let
 exampleTwoServers =
-  { terraformConfig = aws
+  { main = aws
     [ AwsResourceC.AwsInstance
       { name = "foo"
       , staticFiles = [{path = "index.html", content = "This is foo, maam!"}]
@@ -197,7 +197,7 @@ exampleTwoServers =
       , staticFiles = [{path = "index.html", content = "This is bar, sir!"}]
       }
     ]
-    , nixConfig = staticSiteFromPath ""
+    , server = staticSiteFromPath ""
   }
 in
 
@@ -217,4 +217,9 @@ exampleTwoServers
 
 
 -- TODO pin nixpkgs on the machines/AMI?
--- TODO support running more than one server?
+
+-- TODO support running more than one server config
+--  E.g. by making user return a record of type
+--    { main : TerraformConfig..., serverFoo : ServerConfig, serverBar... }
+
+

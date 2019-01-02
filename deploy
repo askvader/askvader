@@ -1,4 +1,4 @@
-cat cloud.dhall | (echo -n "(" && cat && echo ").terraformConfig") | dhall-to-text > cloud.tf \
-  && cat cloud.dhall | (echo -n "(" && cat && echo ").nixConfig") | dhall-to-nix > cloud-in.nix \
+cat cloud.dhall | (echo -n "(" && cat && echo ").main") | dhall-to-text > cloud.tf \
+  && cat cloud.dhall | (echo -n "(" && cat && echo ").server") | dhall-to-nix > cloud-in.nix \
   && cat pre.nix cloud-in.nix > cloud.nix \
   && terraform apply -auto-approve

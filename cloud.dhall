@@ -39,19 +39,40 @@ let AwsInstance = \(name : Text) -> \(x : AwsInstanceR) ->
 let awsNix = \(name : Text) -> AwsInstance name in -- TODO
 -}
 
-
-{ terraformConfig =
+-- Terraform providers used by the code we generate
+-- Pinned and hardcoded for now
+let standardProviders =
   ''
   provider "aws" {
     region  = "eu-west-2"
     version = "= 1.54.0"
-    // shared_credentials_file = "/Users/Hoglund/.aws/credentials"
     profile = "dev"
   }
   provider "null" {
     version = "= 1.0"
   }
+  ''
+in
 
+let AwsResource =
+  < AwsInstance : {}
+  >
+in
+
+-- Render an AWS resource in HCL as understood by terraform
+-- Generates one or more 'resource' blocks
+let showAwsResource = \(res : AwsResource) ->
+  merge
+    { AwsInstance = \(x:{}) -> "instance"
+    }
+  res
+  : Text
+in
+
+{ terraformConfig =
+  standardProviders
+  ++
+  ''
   resource "aws_instance" "http-server" {
     // AMI from https://nixos.org/nixos/download.html
     ami             = "ami-0dada3805ce43c55e"

@@ -9,11 +9,9 @@ Noros is a cloud framework for the [Dhall](https://dhall-lang.org/) language. It
 It uses Terraform, Packer and Nix under the hood and can be seen as a type-safe wrapper around these tools.
 
 ### Goals
-- Capture the entire infrastucture (provisioning and configuration) as a *single expression*
-- Idempotent deploys, e.g. deploying the same state twice has no effect
+- Capture the entire infrastucture (provisioning and configuration) as a *single, self-contained expression*
+- Idempotent deploys: Deploying the same state twice has no effect
 - Single, type-safe configuration language
-- Full reproducibility of any state
-- Run on top of AWS or bare metal
 
 ### Getting started
 

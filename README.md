@@ -4,7 +4,12 @@
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Cloud provisioning using [Dhall](https://dhall-lang.org/).
+Noros is an cloud framework based on the [Dhall](https://dhall-lang.org/) language. It is an opinionated wrapper around Terraform and Nix, with the following goals:
+
+- The infrastructure (both provisioning and configuration) should be captured in code
+- A cloud infrastucture should be *single expression*
+- Deploying should be idempotent, encouraging continous redeploys of the infrastructure state
+- Errors should be catched by the type checker before deploying
 
 ### Getting started
 

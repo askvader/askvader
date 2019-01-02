@@ -1,7 +1,4 @@
-Noros
-===
-
-![](https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png | width=100)
+<img src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="400">
 
 Framework for describing and provisioning cloud infrastructure using [Dhall](https://dhall-lang.org/).
 

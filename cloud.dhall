@@ -40,7 +40,6 @@ let awsNix = \(name : Text) -> AwsInstance name in -- TODO
 -}
 
 
-
 { terraformConfig =
   ''
   provider "aws" {

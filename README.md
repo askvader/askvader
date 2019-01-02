@@ -1,6 +1,10 @@
-<img src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="400">
+- Website: https://www.terraform.io
+- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
+- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
-Framework for describing and provisioning cloud infrastructure using [Dhall](https://dhall-lang.org/).
+<img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
+
+Cloud provisioning using [Dhall](https://dhall-lang.org/).
 
 ### Getting started
 

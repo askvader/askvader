@@ -30,6 +30,7 @@ in
 let
 standardAwsOptions =
   -- AMI from https://nixos.org/nixos/download.html
+  -- Nixos 18.09
   { ami = "ami-0dada3805ce43c55e"
   , keyName = "admin"
   }
@@ -89,12 +90,17 @@ showAwsResource = \(res : AwsResource) ->
           ''
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
-            instance_type   = "t2.micro"
-            // instance_type   = "t2.medium"
+            // instance_type   = "m5d.2xlarge"
+            instance_type   = "t2.medium"
+            // instance_type = "i3.xlarge"
             key_name        = "admin"
 
             tags {
               Name = "${name}"
+            }
+
+            root_block_device {
+              volume_size = 30 // TODO big!
             }
           }
           resource "null_resource" "${name}-prov" {
@@ -184,6 +190,15 @@ in
 
 
 -- Examples
+let
+awsSingle
+  = aws
+    [ AwsResourceC.AwsInstance
+      { name = "foo"
+      , staticFiles = [{path = "index.html", content = "Nothing to see here!"}]
+      }
+    ]
+in
 
 let
 exampleTwoServers =
@@ -202,9 +217,35 @@ exampleTwoServers =
 in
 
 
-
-
-
+let
+-- Gitlab example
+--
+-- See https://nixos.org/nixos/manual/#module-services-gitlab
+-- TODO root volume size issue for NixOS?
+testGitlab =
+  let serverConfig =
+  { services = { gitlab =
+  {
+    enable = True
+  , databasePassword = "redacted"
+  , https = True
+  , host = "yolovo.test.bpletza.de"
+  , port = 443
+  , user = "git"
+  , group = "git"
+  , secrets =
+    { secret = "haha"
+    , otp = ""
+    , db = ""
+    , jws = ""
+    } -- TODO store elsewhere
+  , extraConfig = { gitlab = { default_projects_features = { builds = False } } }
+  }
+  }
+  }
+  in
+  { main = awsSingle, server = serverConfig }
+in
 
 
 
@@ -213,8 +254,7 @@ in
 
 -- Main
 
-exampleTwoServers
-
+testGitlab
 
 -- TODO pin nixpkgs on the machines/AMI?
 
@@ -223,3 +263,6 @@ exampleTwoServers
 --    { main : TerraformConfig..., serverFoo : ServerConfig, serverBar... }
 
 
+-- TODO configurable EC2 instance type/size
+
+-- TODO learn about AWSs EFS vs EBS

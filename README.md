@@ -4,7 +4,7 @@
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Noros is a cloud provisioning tool using the [Dhall](https://dhall-lang.org/) language. It lets you describe cloud infrastructure such as servers, storage, VPC, network setup, orchestration engines, batch jobs etc as *single expression*.
+Noros is a cloud provisioning tool based on the [total](https://en.wikipedia.org/wiki/Total_functional_programming) configuration [Dhall](https://dhall-lang.org/) language. It lets you describe cloud infrastructure such as servers, storage, VPC, network setup, orchestration engines, batch jobs etc as *single expression*.
 
 
 ### Goals

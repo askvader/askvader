@@ -6,12 +6,17 @@
 
 Noros is a cloud provisioning tool using the [Dhall](https://dhall-lang.org/) language. It lets you describe cloud infrastructure such as servers, storage, VPC, network setup, orchestration engines, batch jobs etc as *single expression*.
 
-It uses Terraform, Packer and Nix under the hood and can be seen as a type-safe wrapper around (an opinionated subset of) the capabilities of these tools.
 
 ### Goals
-- Capture the entire infrastucture (provisioning and configuration) as a *single, self-contained expression*
-- Minimal and idempotent updates, encouraging fully automated and continous updates
-- Use a type-safe configuration language for everything
+- Capture the entire infrastucture as a *single, self-contained expression*
+- Fully declarative: write an single expression and run `noros apply`
+- Minimal and idempotent, encouraging fully automated and continous updates
+- Use the same type-safe configuration language for everything
+- Reproducible by default. If it deploys today it will deploy tomorrow (barring breaking API changes).
+
+## Architecture
+
+Noros uses Terraform, Packer and Nix under the hood. It can be seen as a wrapper around an opinionated subset of the capabilities of these tools.
 
 
 --

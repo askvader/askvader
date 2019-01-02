@@ -10,7 +10,7 @@ It uses Terraform, Packer and Nix under the hood and can be seen as a type-safe 
 
 ### Goals
 - Capture the entire infrastucture (provisioning and configuration) as a *single, self-contained expression*
-- Idempotent deploys: Deploying the same state twice has no effect
+- Minimal and idempotent updates, encouraging fully automated and continous updates
 - Single, type-safe configuration language
 
 ### Getting started

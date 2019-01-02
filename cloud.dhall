@@ -33,6 +33,15 @@ standardAwsOptions =
 in
 
 
+
+
+
+
+
+--
+-- AWS
+--
+
 let
 AwsInstanceR =
   -- Affects name of instance
@@ -121,6 +130,25 @@ showAwsResource = \(res : AwsResource) ->
   : Text
 in
 
+-- Transform a list of AWS resources into a Terraform config
+let
+  aws = \(resources : List AwsResource) ->
+    standardProviders
+    ++
+    (
+    let concatMap = https://prelude.dhall-lang.org/Text/concatMap in
+    (concatMap AwsResource showAwsResource resources)
+    )
+in
+
+
+
+
+
+
+--
+-- High-level resources
+--
 
 let
 StaticHTTPServer =
@@ -146,22 +174,44 @@ staticSiteFromPath = \(path : Text) ->
 in
 
 
-{ terraformConfig =
-    standardProviders
-    ++
-    showAwsResource (AwsResourceC.AwsInstance
+
+
+
+
+
+
+
+-- Examples
+
+let
+exampleTwoServers =
+  { terraformConfig = aws
+    [ AwsResourceC.AwsInstance
       { name = "foo"
-      , staticFiles = [{path = "index.html", content = "This is foo!"}]
-      })
-    ++
-    showAwsResource (AwsResourceC.AwsInstance
+      , staticFiles = [{path = "index.html", content = "This is foo, maam!"}]
+      }
+    , AwsResourceC.AwsInstance
       { name = "bar"
-      , staticFiles = [{path = "index.html", content = "This is bar indeed!"}]
-      })
+      , staticFiles = [{path = "index.html", content = "This is bar, sir!"}]
+      }
+    ]
+    , nixConfig = staticSiteFromPath ""
+  }
+in
 
-, nixConfig = staticSiteFromPath ""
-}
 
+
+
+
+
+
+
+
+
+
+-- Main
+
+exampleTwoServers
 
 
 -- TODO pin nixpkgs on the machines/AMI?

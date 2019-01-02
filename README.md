@@ -4,7 +4,9 @@
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Noros is an cloud framework based on the [Dhall](https://dhall-lang.org/) language. It provides a type-safe wrapper around is an opinionated subset of Terraform and Nix.
+Noros is an cloud framework based on the [Dhall](https://dhall-lang.org/) language. 
+
+It uses Terraform, Packer and Nix under the hood and can be seen as a type-safe wrapper around these tools.
 
 ### Goals
 - Capture the entire infrastucture (provisioning and configuration) as a *single expression*

@@ -224,24 +224,41 @@ let
 -- TODO root volume size issue for NixOS?
 testGitlab =
   let serverConfig =
-  { services = { gitlab =
-  {
-    enable = True
-  , databasePassword = "redacted"
-  , https = True
-  , host = "yolovo.test.bpletza.de"
-  , port = 443
-  , user = "git"
-  , group = "git"
-  , secrets =
-    { secret = "haha"
-    , otp = ""
-    , db = ""
-    , jws = ""
-    } -- TODO store elsewhere
-  , extraConfig = { gitlab = { default_projects_features = { builds = False } } }
-  }
-  }
+  { services =
+    { nginx =
+      {
+        enable = True
+      , recommendedGzipSettings = True
+      , recommendedOptimisation = True
+      , recommendedProxySettings = True
+      , recommendedTlsSettings = True
+      , virtualHosts =
+        { gitLab =
+          {
+            enableACME = True
+          , forceSSL = True
+          , locations = { dhallEscapeSlash = { proxyPass = "http://unix:/run/gitlab/gitlab-workhorse.socket" }}
+          }
+        }
+      }
+    , gitlab =
+      {
+        enable = True
+      , databasePassword = "redacted"
+      , https = True
+      , host = "yolovo.test.bpletza.de"
+      , port = 443
+      , user = "git"
+      , group = "git"
+      , secrets =
+        { secret = "haha"
+        , otp = ""
+        , db = ""
+        , jws = ""
+        } -- TODO store elsewhere
+      , extraConfig = { gitlab = { default_projects_features = { builds = False } } }
+      }
+    }
   }
   in
   { main = awsSingle, server = serverConfig }

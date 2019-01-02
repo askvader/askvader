@@ -1,9 +1,5 @@
 
 -- TODO pin prelude
-let keyValue =
-        https://prelude.dhall-lang.org/JSON/keyValue in
-let concat =
-        https://prelude.dhall-lang.org/List/concat in
 
 -- let Dict = \(a : Type) -> List { mapKey : Text, mapValue : a } in
 -- let JSON = <A : List JSON | O : Dict JSON | N : Natural | S : Text > in
@@ -42,6 +38,7 @@ let AwsInstance = \(name : Text) -> \(x : AwsInstanceR) ->
   >  in
 let awsNix = \(name : Text) -> AwsInstance name in -- TODO
 -}
+
 
 { terraformConfig =
   ''

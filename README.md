@@ -1,6 +1,8 @@
 Noros
 ===
 
+Framework for describing and provisioning cloud infrastructure using [Dhall](https://dhall-lang.org/).
+
 ### Getting started
 
 - Create default security group + IAM credentials in AWS console

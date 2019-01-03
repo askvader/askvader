@@ -33,6 +33,9 @@ standardAwsOptions =
   -- Nixos 18.09
   { ami = "ami-0dada3805ce43c55e"
   , keyName = "admin"
+		-- instance_type   = "m5d.2xlarge"
+	, instanceType   = "t2.medium"
+		-- instance_type = "i3.xlarge"
   }
 in
 
@@ -90,9 +93,7 @@ showAwsResource = \(res : AwsResource) ->
           ''
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
-            // instance_type   = "m5d.2xlarge"
-            instance_type   = "t2.medium"
-            // instance_type = "i3.xlarge"
+            instance_type		= "${standardAwsOptions.instanceType}"
             key_name        = "admin"
 
             tags {
@@ -299,8 +300,41 @@ testGitlab =
   { main = awsSingle, server = serverConfig }
 in
 
--- A single node Consul cluster
+
+-- TODO single NixOS machine with docker enabled
+let
+testDocker =
+  let serverConfig =
+	{ services =
+		{ virtualization =
+			{ docker =
+				{ enable = True }
+			}
+		}
+	, users =
+		{ users	=
+			{ root =
+				{ extraGroups = ["docker"] }
+			}
+		}
+	}
+  in
+  { main = awsSingle, server = serverConfig }
+in
+
+
+
+-- TODO build custom Docker images using NixOS (preferably driven by expressions, similar to our NixOS provisioning)
+--   See: https://nixos.wiki/wiki/Docker
+
+-- TODO Consul cluster based on Docker+Kubernetes?
+-- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
+
+
+-- A single node Consul cluster based on NixOS
 -- TODO >1
+--
+-- TODO: More generally: passing data to managed nodes
 let
 testConsul =
   let serverConfig =

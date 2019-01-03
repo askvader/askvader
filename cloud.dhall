@@ -386,11 +386,23 @@ in
 
 
 
+{-
+fun (X : sigT V) (Y : Type) (P : (forall Z : Type, V Z -> Y)) =>
+    sigT_rect (fun _ : sigT V => Y)
+              (fun (x : Type) (p : V x) =>
+                 (fun X1 : V x -> Y => (fun X2 : Y => X2) (X1 p)) (P x)) X.
 
+fun H : (forall Y : Type, (forall X : Type, V X -> Y) -> Y) =>
+    H (sigT V) (fun (X : Type) (Y : V X) => existT V X Y)
+-}
 
 -- Main
 
-testDocker
+let
+empty = { main = aws ([] : List AwsResource), server = {=} }
+in
+
+empty
 
 -- TODO handle data sources and/or TF outputs
 --
@@ -405,6 +417,16 @@ testDocker
 -- Or we can fake it, having resources reference outputs in an untyped way.
 -- E.g. 'here, use the IP of the resource named X if it exists' -> this we can
 -- compile to normal TF interpolations. Or even take the Resources
+--
+{-
+	Rethink current compilation strategy
+	----
+	Instead of creating effectively (Text, a, b, ...),
+	use something like
+		List { forall x y. this : Resource x, parent : Resource y, y -> NodeConf }
+
+-}
+
 
 
 -- TODO pin nixpkgs on the machines/AMI?

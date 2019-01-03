@@ -305,11 +305,9 @@ in
 let
 testDocker =
   let serverConfig =
-	{ services =
-		{ virtualization =
-			{ docker =
-				{ enable = True }
-			}
+	{ virtualisation =
+		{ docker =
+			{ enable = True }
 		}
 	, users =
 		{ users	=
@@ -322,6 +320,11 @@ testDocker =
   { main = awsSingle, server = serverConfig }
 in
 
+
+-- TODO NixOS machine with docker + standard consul image
+-- E.g. as above, then run:
+-- 		docker pull consul
+-- 		docker run -t -i consul agent -bootstrap-expect=1 -server
 
 
 -- TODO build custom Docker images using NixOS (preferably driven by expressions, similar to our NixOS provisioning)
@@ -367,7 +370,9 @@ in
 
 -- Main
 
-testConsul
+testDocker
+
+-- TODO handle data sources and/or TF outputs
 
 -- TODO pin nixpkgs on the machines/AMI?
 

@@ -321,6 +321,8 @@ testDocker =
 in
 
 
+-- TODO get TF to boot EKS cluster and run standard containers in there (e.g. consul cluster)
+
 -- TODO NixOS machine with docker + standard consul image
 -- E.g. as above, then run:
 -- 		docker pull consul
@@ -383,4 +385,3 @@ testDocker
 
 -- TODO configurable EC2 instance type/size
 
--- TODO learn about AWSs EFS vs EBS

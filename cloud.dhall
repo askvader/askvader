@@ -181,15 +181,6 @@ staticSiteFromPath = \(path : Text) ->
   } : StaticHTTPServer
 in
 
-
-
-
-
-
-
-
-
--- Examples
 let
 awsSingle
   = aws
@@ -199,6 +190,15 @@ awsSingle
       }
     ]
 in
+
+
+
+
+
+
+
+
+-- Examples
 
 let
 exampleTwoServers =
@@ -217,15 +217,18 @@ exampleTwoServers =
 in
 
 
-let
--- Gitlab example
+-- A single-node Gitlab instance
+-- Using a local PostgreSQL for persistence
 --
--- See https://nixos.org/nixos/manual/#module-services-gitlab
--- TODO root volume size issue for NixOS?
+-- Based on
+--		https://nixos.org/nixos/manual/#module-services-gitlab
+--
+-- TODO this fails on the first deploy, only works on redeploy
+let
 testGitlab =
   let serverConfig =
-  { networking =
-      { firewall = { enable = True, allowedTCPPorts = [ 80 ] } }
+{ networking =
+	{ firewall = { enable = True, allowedTCPPorts = [ 80 ] } }
   , services =
     { nginx =
       {
@@ -296,6 +299,33 @@ testGitlab =
   { main = awsSingle, server = serverConfig }
 in
 
+-- A single node Consul cluster
+-- TODO >1
+let
+testConsul =
+  let serverConfig =
+	{ networking =
+		-- TODO on AWS, also requires 8500 to be in the Security Group
+		-- TODO seems to work even with NixOS firewall disallowing 8500
+		-- Is this firewall ignored on EC2?
+		{ firewall = { enable = True
+		, allowedTCPPorts = [ 80 ] } }
+	, services =
+		{ consul =
+			{ enable = True
+			, extraConfig =
+				{ server = True
+				, bootstrap_expect = 1
+				, ui = True
+				-- TODO exposes API without any ACL, dangerous!
+  			, client_addr = "0.0.0.0"
+				}
+			}
+		}
+	}
+  in
+  { main = awsSingle, server = serverConfig }
+in
 
 
 
@@ -303,7 +333,7 @@ in
 
 -- Main
 
-testGitlab
+testConsul
 
 -- TODO pin nixpkgs on the machines/AMI?
 

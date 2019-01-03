@@ -62,7 +62,7 @@ let
 CannedACL =
 	< Private : {}
 	| PublicRead : {}
-	| PublicReadWRite : {}
+	| PublicReadWrite : {}
 	>
 	-- TODO ...
 in
@@ -404,7 +404,7 @@ testDocker
 --
 -- Or we can fake it, having resources reference outputs in an untyped way.
 -- E.g. 'here, use the IP of the resource named X if it exists' -> this we can
--- compile
+-- compile to normal TF interpolations. Or even take the Resources
 
 
 -- TODO pin nixpkgs on the machines/AMI?

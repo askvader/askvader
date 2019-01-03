@@ -59,8 +59,24 @@ AwsInstanceR =
   }
 in
 let
+CannedACL =
+	< Private : {}
+	| PublicRead : {}
+	| PublicReadWRite : {}
+	>
+	-- TODO ...
+in
+let
+S3BucketR =
+  { resourceName : Text
+  , bucketName : Optional Text
+  , acl : Optional CannedACL
+	}
+in
+let
 AwsResource =
   < AwsInstance : AwsInstanceR
+  | S3Bucket : S3BucketR
   >
 in
 let
@@ -73,7 +89,9 @@ in
 let
 showAwsResource = \(res : AwsResource) ->
   merge
-    { AwsInstance = \(instance : AwsInstanceR) ->
+    { S3Bucket = \(bucket : S3BucketR) ->
+				"TODO"
+		, AwsInstance = \(instance : AwsInstanceR) ->
       let
         name = instance.name
       in
@@ -375,6 +393,19 @@ in
 testDocker
 
 -- TODO handle data sources and/or TF outputs
+--
+-- AS long as we're compiling to Text, we can't really process returned
+-- data in any nice fashion (e.g. using typed Dhall). The initial reduction
+-- step requires a normal form expression, so lambdas/continuations etc
+-- are impossible.
+--
+-- TODO could this be solved with a dhall-to-terraform+JSON (or similar)
+-- compiler, where intermediate evaluation is faked with 'external' resources?
+--
+-- Or we can fake it, having resources reference outputs in an untyped way.
+-- E.g. 'here, use the IP of the resource named X if it exists' -> this we can
+-- compile
+
 
 -- TODO pin nixpkgs on the machines/AMI?
 

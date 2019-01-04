@@ -170,6 +170,10 @@ AwsAttribute =
 			>
 		}
   | AwsInstance :
+    -- TODO FIXME switch to use name here and restore use of attributes in resource definition
+    -- (ideally this would be a recursive dependency!)
+    -- In other words make Resources -[depend on]-> Attributes
+    -- further down, provide safe wrappers for these constructors that take (Resource * AttributeName) and unwraps the name
     { source : AwsInstanceR
     , attr : AwsInstanceA
     }

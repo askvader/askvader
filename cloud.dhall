@@ -23,6 +23,9 @@ standardProviders =
   provider "null" {
     version = "= 1.0"
   }
+  provider "external" {
+    version = "= 1.0.0"
+  }
   ''
 in
 
@@ -220,7 +223,26 @@ showAwsResource = \(res : AwsResource) ->
             ''
           ) ""
       in
+          -- TODO also write conf Dhall code + conf attr type to files for verification
+
+
+          -- TODO write spec code as tmp-conf-a-${name}.dhall
+          -- TODO write spec value as tmp-conf-b-${name}.dhall
+
+          -- TODO create ./eval script
+          --    Recieves two dhall files f and x, compiles (f x) to Nix and returns a JSON object {"nix{: "...nix code..."}
+          --    On error, print error to stderr and return non-0
+          --
+          -- TODO better way to get unique name of code file?
+          -- Here we rely on the fact that TF resources must have unique names anyway
+          -- (pushing complexity to the caller).
+          --
+          -- Ideally we'd hash the code or use a State monad to supply the names.
           ''
+          data "external" "${name}-eval" {
+            program = ["./eval", "tmp-${name}.dhall"]
+            query = {}
+          }
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
             instance_type		= "${standardAwsOptions.instanceType}"

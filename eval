@@ -1,0 +1,7 @@
+#!/usr/bin/env runghc
+
+import System.Environment
+
+
+main =
+  putStrLn "{\"nix\": \"x: x\"}"

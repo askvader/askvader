@@ -105,6 +105,11 @@ in
 -- Future:
 -- For each new AwsResource (server) we define, pass in an attribute AND a function (a -> ServerConfig).
 let
+AwsInstanceA =
+      < PrivateIp : {}
+      >
+in
+let
 AwsAttribute =
 	< S3BucketData :
 		{ source : S3BucketR
@@ -115,9 +120,7 @@ AwsAttribute =
 		}
   | AwsInstance :
     { source : AwsInstanceR
-    , attr :
-      < PrivateIp : {}
-      >
+    , attr : AwsInstanceA
     }
   >
 in
@@ -209,6 +212,20 @@ showAwsResource = \(res : AwsResource) ->
   : Text
 in
 
+let
+getAttr = \(attr : AwsAttribute) ->
+    merge
+    { S3BucketData = \(x:{source:S3BucketR,attr:<Id:{}|Region:{}>})->
+      "TODO"
+    , AwsInstance = \(x:{source:AwsInstanceR,attr:
+      <PrivateIp:{}>})->
+        ''
+        ''${aws_instance.${x.source.name}.private_ip}''
+    }
+    attr
+    : Text
+in
+
 -- Transform a list of AWS resources into a Terraform config
 let
   aws = \(resources : List AwsResource) ->
@@ -253,16 +270,20 @@ staticSiteFromPath = \(path : Text) ->
 in
 
 let
-awsInstanceShowingText = \(text : Text) ->
-    AwsResources.AwsInstance
-      { name = "foo"
+awsInstanceShowingText = \(name : Text) -> \(text : Text) ->
+      { name = name
       , config = "serverConfig" -- TODO actually use
       , configAttrs = noAttrs
       , staticFiles = [{path = "index.html", content =  text}]
       }
 in
 let
-awsSingle = aws [awsInstanceShowingText "Nothing to see here!"]
+awsSingle = aws [
+  AwsResources.AwsInstance
+  (
+  awsInstanceShowingText "single" "Nothing to see here!"
+  )
+  ]
 in
 
 
@@ -298,14 +319,19 @@ in
 let
 chainedServers =
   let
-    s1 = awsInstanceShowingText "0"
+    s1 = awsInstanceShowingText "foo" "0"
   in
   let
-    s2 = awsInstanceShowingText
+    s2 = awsInstanceShowingText "bar"
         (getAttr (AwsAttributes.AwsInstance
-                {source = s1, attr = PrivateIp {=}}))
+                { source = s1
+                , attr = (constructors AwsInstanceA).PrivateIp {=}
+                  --source = s1, attr =
+                  -- (constructors AwsInstanceA).PrivateIp {=}
+                  }))
   in
-  { main = aws [s1, s2]
+  { main = aws [ AwsResources.AwsInstance s1
+               , AwsResources.AwsInstance s2]
   , server = staticSiteFromPath ""
   }
 in
@@ -479,7 +505,7 @@ let
 empty = { main = aws ([] : List AwsResource), server = {=} }
 in
 
-empty
+chainedServers
 
 -- TODO handle data sources and/or TF outputs
 --

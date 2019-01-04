@@ -268,7 +268,9 @@ showAwsResource = \(res : AwsResource) ->
             }
             provisioner "file" {
               // TODO this name is hardcoded in ./deploy
-              source      = "tmp.nix"
+              // source      = "tmp.nix"
+
+              content = "''${data.external.${name}-eval.result.nix}"
               destination = "/etc/nixos/configuration.nix"
             }
             provisioner "remote-exec" {

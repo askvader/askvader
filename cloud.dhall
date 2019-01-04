@@ -34,8 +34,9 @@ standardAwsOptions =
   -- Nixos 18.09
   { ami = "ami-0dada3805ce43c55e"
   , keyName = "admin"
-		-- instance_type   = "m5d.2xlarge"
-	, instanceType   = "t2.medium"
+	, instanceType = "t2.micro"
+  -- instance_type   = "m5d.2xlarge"
+	-- , instanceType   = "t2.medium"
 		-- instance_type = "i3.xlarge"
     --
   -- In GB
@@ -245,7 +246,7 @@ showAwsResource = \(res : AwsResource) ->
             }
             provisioner "file" {
               // TODO this name is hardcoded in ./deploy
-              source      = "cloud.nix"
+              source      = "tmp.nix"
               destination = "/etc/nixos/configuration.nix"
             }
             provisioner "remote-exec" {

@@ -156,9 +156,10 @@ in
 --        - (Assuming evaluation succeeds) provisions 'foo', with access to 'foo-eval.result'
 --
 --    How to make this type-safe?
+--
 --    Write both code and data to a separate file and check that they match (using 'dhall type')
 --    before invoking Terraform.
---
+--    NOTE even without this deploy will fail, but may succeed partially (so not ideal UX)
 let
 AwsAttribute =
 	< S3BucketData :
@@ -179,10 +180,6 @@ let
 AwsAttributes = constructors AwsAttribute
 in
 
-let
-checkAttr
-  \(x : AwsAttribute)
-  \(b :
 
 let
 AwsResource =

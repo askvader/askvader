@@ -1,5 +1,5 @@
-cat cloud.dhall | (echo -n "(" && cat && echo ").main") | dhall-to-text > cloud.tf \
-  && cat cloud.dhall | (echo -n "(" && cat && echo ").server") | dhall-to-nix > cloud-in1.nix \
-  && cat cloud-in1.nix | sed -e 's/dhallEscapeSlash/"\/"/g' > cloud-in.nix \
-  && cat pre.nix cloud-in.nix > cloud.nix \
+cat cloud.dhall | (echo -n "(" && cat && echo ").main") | dhall-to-text > tmp.tf \
+  && cat cloud.dhall | (echo -n "(" && cat && echo ").server") | dhall-to-nix > tmp-in1.nix \
+  && cat tmp-in1.nix | sed -e 's/dhallEscapeSlash/"\/"/g' > tmp-in.nix \
+  && cat pre.nix tmp-in.nix > tmp.nix \
   && terraform apply -auto-approve

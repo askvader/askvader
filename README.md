@@ -2,9 +2,9 @@
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Noros is a library of cloud provisioner written in Dhall. 
+Noros is a library of cloud infrastructure written in Dhall. 
 
-It can be used manage AWS EC2 and EKL clusters, Kubernetes clusters and NixOS servers.
+It can be used describe Nix configurations and Docker containers, and supports deployment on AWS EC2, Kubernetes and NixOS. Terraform is used to bootstrap the infrastructure, though this is mostly hidden from the user.
 
 
 ### Goals

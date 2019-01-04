@@ -8,16 +8,10 @@ It can be used describe Nix configurations and Docker containers, and supports d
 
 
 ### Goals
-- Capture the entire infrastucture as a *single, self-contained expression*
-- Fully declarative: write an single expression and run `noros apply`
-- Minimal and idempotent, encouraging fully automated and continous updates
-- Use the same type-safe configuration language for everything
-- Reproducible by default. If it deploys today it will deploy tomorrow (barring breaking API changes).
-
-## Architecture
-
-Noros uses Terraform, Packer and Nix under the hood. It can be seen as a wrapper around an opinionated subset of the capabilities of these tools.
-
+- Immutable: Describe your infrastructure as a single, immutable expression
+- Reproducible: Expressions are designed to work forever
+- Powerful: Use the full power of Dhall to generate arbitrarily complex setup
+- Type-safe
 
 --
 

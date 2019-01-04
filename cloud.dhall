@@ -50,15 +50,6 @@ in
 --
 
 let
-AwsInstanceR =
-  -- Affects name of instance
-  -- You must create a ServerConfig (Nix expression) of the same name
-  { name : Text
-  -- Generate a set of static files (subpaths of /var/static)
-  , staticFiles : List { path : Text, content : Text }
-  }
-in
-let
 CannedACL =
 	< Private : {}
 	| PublicRead : {}
@@ -73,6 +64,56 @@ S3BucketR =
   , acl : Optional CannedACL
 	}
 in
+
+--
+-- Defines AWS attribtues to query from Terraform resources or data sources.
+--
+-- TODO minimal example:
+--  Boot N servers and dasy-chain so that each server knows about the previous one (if any)
+--
+-- Now:
+-- Pass in untyped attribute set to each resource
+-- Serverconfig will recieve this as [{name:Text,value:Text}]
+--
+-- Future:
+-- For each new AwsResource (server) we define, pass in an attribute AND a function (a -> ServerConfig).
+let
+AwsAttribute =
+	< S3BucketData :
+		{ source : S3BucketR
+		, attr :
+			< Id : {}
+			| Region : {}
+			>
+		}
+  >
+in
+let
+-- TODO we could extend AwsAttribute with the Terraform built-in functions
+AwsAttributeSet = List AwsAttribute
+in
+let
+noAttrs = [] : List AwsAttribute
+in
+
+
+let
+AwsInstanceR =
+  -- Affects name of instance
+  -- You must create a ServerConfig (Nix expression) of the same name
+  { name : Text
+  -- Server config expression, which must exists in top-level, or TF will complain
+  , config : Text
+  -- Attributes of other objects to pass to config (TODO pass from self)
+  , configAttrs : AwsAttributeSet
+  -- Generate a set of static files (subpaths of /var/static)
+  , staticFiles : List { path : Text, content : Text }
+  }
+in
+
+let
+AwsAttributes = constructors AwsAttribute
+in
 let
 AwsResource =
   < AwsInstance : AwsInstanceR
@@ -80,7 +121,7 @@ AwsResource =
   >
 in
 let
-  AwsResourceC = constructors AwsResource
+AwsResources = constructors AwsResource
 in
 
 
@@ -203,8 +244,10 @@ in
 let
 awsSingle
   = aws
-    [ AwsResourceC.AwsInstance
+    [ AwsResources.AwsInstance
       { name = "foo"
+      , config = "serverConfig" -- TODO actually use
+      , configAttrs = noAttrs
       , staticFiles = [{path = "index.html", content = "Nothing to see here!"}]
       }
     ]
@@ -222,12 +265,16 @@ in
 let
 exampleTwoServers =
   { main = aws
-    [ AwsResourceC.AwsInstance
+    [ AwsResources.AwsInstance
       { name = "foo"
+      , config = "serverConfig" -- TODO actually use
+      , configAttrs = noAttrs
       , staticFiles = [{path = "index.html", content = "This is foo, maam!"}]
       }
-    , AwsResourceC.AwsInstance
+    , AwsResources.AwsInstance
       { name = "bar"
+      , config = "serverConfig" -- TODO actually use
+      , configAttrs = noAttrs
       , staticFiles = [{path = "index.html", content = "This is bar, sir!"}]
       }
     ]
@@ -385,7 +432,6 @@ testConsul =
 in
 
 
-
 {-
 fun (X : sigT V) (Y : Type) (P : (forall Z : Type, V Z -> Y)) =>
     sigT_rect (fun _ : sigT V => Y)
@@ -394,6 +440,10 @@ fun (X : sigT V) (Y : Type) (P : (forall Z : Type, V Z -> Y)) =>
 
 fun H : (forall Y : Type, (forall X : Type, V X -> Y) -> Y) =>
     H (sigT V) (fun (X : Type) (Y : V X) => existT V X Y)
+---
+Or something like
+		[forall (b:Type) -> (forall (a:Type) -> {r:Res a,c:Cons a} -> b) -> b]
+
 -}
 
 -- Main
@@ -424,6 +474,9 @@ empty
 	Instead of creating effectively (Text, a, b, ...),
 	use something like
 		List { forall x y. this : Resource x, parent : Resource y, y -> NodeConf }
+
+	---
+	Won't work, we don't have existentials!
 
 -}
 

@@ -1,10 +1,10 @@
-- Website: https://www.terraform.io
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Noros is a cloud provisioning language embedded in [Dhall](https://dhall-lang.org/). It lets you describe entire infrastructure such as servers, storage, proxies, monitoring, firewalls, schedulers etc as *single, immutable expression*. If you make changes to your configuration Noros will automatically [diff and patch](https://opensource.com/article/18/8/diffs-patches) your infrastructure.
+Noros is a library of cloud infrastructure written in Dhall. It generates HCL expressions and delegates all actual provisioning to Terraform.
+
+It can provision NixOS servers, Kubernetes clusters and AWS (EC2 and EKL).
 
 
 ### Goals

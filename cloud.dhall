@@ -1,5 +1,6 @@
 
--- TODO pin prelude
+-- TODO pin prelude using
+--    dhall resolve
 
 -- let Dict = \(a : Type) -> List { mapKey : Text, mapValue : a } in
 -- let JSON = <A : List JSON | O : Dict JSON | N : Natural | S : Text > in
@@ -79,6 +80,8 @@ in
 
 
 let
+
+
 AwsInstanceR =
   -- Affects name of instance
   -- You must create a ServerConfig (Nix expression) of the same name
@@ -109,6 +112,53 @@ AwsInstanceA =
       < PrivateIp : {}
       >
 in
+-- TODO flatten for easier construction
+-- Could also provide extra records like:
+--      AwsAttributes.Instance.PrivateIp x
+--      AwsAttributes.Text.Instance.PrivateIp x
+--      AwsAttributes.Bool.Instance.AssociatePublicIpAddress
+--
+-- TODO is getAttr ugly?
+-- Not too bad, seing as we can't pattern match on strings in Dhall :)
+--
+-- In other words, this pattern 'solves' how to get values from Terraform to 'splice' back into the TF output
+-- It can even be made type-safe, by defining a separate AwsAttribute for different typs as per above
+--
+-- ++++++
+--
+-- Problem: generate *safe* configs for multiple configurable resources (AWS instances, containers, pods etc)
+-- The current hack allows only one config and no passing of data from Terraform (though passing from the init config is OK)
+-- Note that the type-safe configs are really dhall functions to be applied *as Terraform runs*.
+--
+--   Idea 0
+--      Skip dhall-to-nix et al, define Dhall *ADT* for resources
+--      Populate these with (Either Text TextAttr) etc for all attribute types
+--      Conver them to JSON/Nix/Bash/etc with TF splices which is transferred to the resource
+--
+--      *Type safe?* Yes! The resource can ask for an Attr of the correct type
+--      Drawback: Defining these ADTs is a lot of work
+--
+--   Idea 1
+--     Configurable resources (AWS instances, containers, etc) are represented as Dhall code in a *Text* value
+--     The inner code is a function of the expected resources to (currently) some unknown, non-function type (e.g. different types for different Nix configurations)
+--     For each resource, allow passing of attributes (or Text), a la
+--
+--        AwsInstance
+--          { name = "foo"
+--          , config =
+--              { code = "..." -- dhall code of type (Bool -> C)
+--              , data = AwsAttributes.Bool.Instance.AssociatePublicIpAddress someInstance
+--              }
+--          }
+--     Compile this to TF code that:
+--        - Provisions an 'external' data source 'foo-eval',
+--        - This invokes Dhall passing along the code applied to the data (spliced in using getAttr)
+--        - (Assuming evaluation succeeds) provisions 'foo', with access to 'foo-eval.result'
+--
+--    How to make this type-safe?
+--    Write both code and data to a separate file and check that they match (using 'dhall type')
+--    before invoking Terraform.
+--
 let
 AwsAttribute =
 	< S3BucketData :
@@ -128,6 +178,12 @@ in
 let
 AwsAttributes = constructors AwsAttribute
 in
+
+let
+checkAttr
+  \(x : AwsAttribute)
+  \(b :
+
 let
 AwsResource =
   < AwsInstance : AwsInstanceR

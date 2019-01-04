@@ -1,23 +1,17 @@
-- Website: https://www.terraform.io
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Noros is a cloud provisioning language embedded in [Dhall](https://dhall-lang.org/). It lets you describe entire infrastructure such as servers, storage, proxies, monitoring, firewalls, schedulers etc as *single, immutable expression*. If you make changes to your configuration Noros will automatically [diff and patch](https://opensource.com/article/18/8/diffs-patches) your infrastructure.
+Noros is a library of cloud infrastructure written in Dhall. 
+
+It can be used describe Nix configurations and Docker containers, and supports deployment on AWS EC2, Kubernetes and NixOS. Terraform is used to bootstrap the infrastructure, though this is mostly hidden from the user.
 
 
 ### Goals
-- Capture the entire infrastucture as a *single, self-contained expression*
-- Fully declarative: write an single expression and run `noros apply`
-- Minimal and idempotent, encouraging fully automated and continous updates
-- Use the same type-safe configuration language for everything
-- Reproducible by default. If it deploys today it will deploy tomorrow (barring breaking API changes).
-
-## Architecture
-
-Noros uses Terraform, Packer and Nix under the hood. It can be seen as a wrapper around an opinionated subset of the capabilities of these tools.
-
+- Immutable: Describe your infrastructure as a single, immutable expression
+- Reproducible: Expressions are designed to work forever
+- Powerful: Use the full power of Dhall to generate arbitrarily complex setup
+- Safe: The type checker catches most errors before deployment
 
 --
 

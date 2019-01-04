@@ -11,7 +11,7 @@ It can be used describe Nix configurations and Docker containers, and supports d
 - Immutable: Describe your infrastructure as a single, immutable expression
 - Reproducible: Expressions are designed to work forever
 - Powerful: Use the full power of Dhall to generate arbitrarily complex setup
-- Type-safe
+- Safe: The type checker catches most errors before deployment
 
 --
 

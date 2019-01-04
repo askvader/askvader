@@ -37,6 +37,9 @@ standardAwsOptions =
 		-- instance_type   = "m5d.2xlarge"
 	, instanceType   = "t2.medium"
 		-- instance_type = "i3.xlarge"
+    --
+  -- In GB
+  , rootBlockDeviceVolumeSize = 30 -- TODO too big?
   }
 in
 
@@ -72,6 +75,8 @@ in
 
 let
 -- TODO we could extend AwsAttribute with the Terraform built-in functions
+-- This is not needed for *server configs* as they have access to Dhall functions, but
+-- may be useful for other TF resources
 AwsAttributeSet = List TextP
 in
 let
@@ -88,7 +93,7 @@ AwsInstanceR =
   { name : Text
   -- Server config expression, which must exists in top-level, or TF will complain
   , config : Text
-  -- Attributes of other objects to pass to config (TODO pass from self)
+  -- Attributes of other objects to pass to config
   , configAttrs : AwsAttributeSet
   -- Generate a set of static files (subpaths of /var/static)
   , staticFiles : List { path : Text, content : Text }
@@ -98,15 +103,6 @@ in
 --
 -- Defines AWS attribtues to query from Terraform resources or data sources.
 --
--- TODO minimal example:
---  Boot N servers and dasy-chain so that each server knows about the previous one (if any)
---
--- Now:
--- Pass in untyped attribute set to each resource
--- Serverconfig will recieve this as [{name:Text,value:Text}]
---
--- Future:
--- For each new AwsResource (server) we define, pass in an attribute AND a function (a -> ServerConfig).
 let
 AwsInstanceA =
       < PrivateIp : {}
@@ -118,7 +114,7 @@ in
 --      AwsAttributes.Text.Instance.PrivateIp x
 --      AwsAttributes.Bool.Instance.AssociatePublicIpAddress
 --
--- TODO is getAttr ugly?
+-- Is getAttr ugly?
 -- Not too bad, seing as we can't pattern match on strings in Dhall :)
 --
 -- In other words, this pattern 'solves' how to get values from Terraform to 'splice' back into the TF output
@@ -160,6 +156,9 @@ in
 --    Write both code and data to a separate file and check that they match (using 'dhall type')
 --    before invoking Terraform.
 --    NOTE even without this deploy will fail, but may succeed partially (so not ideal UX)
+--
+--    Note that we can never make the configuration of instance X depend on TF properties of X
+--    This is OK, properties are only used for 'downstream' resources in TF
 let
 AwsAttribute =
 	< S3BucketData :
@@ -213,7 +212,7 @@ showAwsResource = \(res : AwsResource) ->
             ''
             provisioner "file" {
               destination = "/var/static/${x.path}"
-              // TODO escape string
+              // TODO escape properly?
               content = "${x.content}"
             }
             ${rs}
@@ -231,7 +230,7 @@ showAwsResource = \(res : AwsResource) ->
             }
 
             root_block_device {
-              volume_size = 30 // TODO big!
+              volume_size = ${Natural/show standardAwsOptions.rootBlockDeviceVolumeSize}
             }
           }
           resource "null_resource" "${name}-prov" {
@@ -260,7 +259,6 @@ showAwsResource = \(res : AwsResource) ->
                 "nixos-rebuild switch"
               ]
             }
-            // TODO errors in above?
           }
 
           ''
@@ -383,9 +381,7 @@ chainedServers =
         (getAttr (AwsAttributes.AwsInstance
                 { source = s1
                 , attr = (constructors AwsInstanceA).PrivateIp {=}
-                  --source = s1, attr =
-                  -- (constructors AwsInstanceA).PrivateIp {=}
-                  }))
+                }))
   in
   { main = aws [ AwsResources.AwsInstance s1
                , AwsResources.AwsInstance s2]
@@ -400,6 +396,7 @@ in
 --		https://nixos.org/nixos/manual/#module-services-gitlab
 --
 -- TODO this fails on the first deploy, only works on redeploy
+-- TF timeouts?
 let
 testGitlab =
   let serverConfig =
@@ -466,7 +463,7 @@ testGitlab =
 					Vqm9LxIWc1uQ1q1HDCejRIxIN3aSH+wgRS3Kcj8kCTIoXd1aERb04g==
 					-----END RSA PRIVATE KEY-----
           ''
-        } -- TODO store elsewhere
+        } -- TODO store secrets elsewhere
       , extraConfig = { gitlab = { default_projects_features = { builds = False } } }
       }
     }
@@ -476,7 +473,7 @@ testGitlab =
 in
 
 
--- TODO single NixOS machine with docker enabled
+-- A single NixOS machine with docker enabled
 let
 testDocker =
   let serverConfig =
@@ -514,7 +511,6 @@ in
 -- A single node Consul cluster based on NixOS
 -- TODO >1
 --
--- TODO: More generally: passing data to managed nodes
 let
 testConsul =
   let serverConfig =
@@ -564,40 +560,11 @@ in
 
 chainedServers
 
--- TODO handle data sources and/or TF outputs
---
--- AS long as we're compiling to Text, we can't really process returned
--- data in any nice fashion (e.g. using typed Dhall). The initial reduction
--- step requires a normal form expression, so lambdas/continuations etc
--- are impossible.
---
--- TODO could this be solved with a dhall-to-terraform+JSON (or similar)
--- compiler, where intermediate evaluation is faked with 'external' resources?
---
--- Or we can fake it, having resources reference outputs in an untyped way.
--- E.g. 'here, use the IP of the resource named X if it exists' -> this we can
--- compile to normal TF interpolations. Or even take the Resources
---
-{-
-	Rethink current compilation strategy
-	----
-	Instead of creating effectively (Text, a, b, ...),
-	use something like
-		List { forall x y. this : Resource x, parent : Resource y, y -> NodeConf }
-
-	---
-	Won't work, we don't have existentials!
-
--}
-
 
 
 -- TODO pin nixpkgs on the machines/AMI?
-
--- TODO support running more than one server config
---  E.g. by making user return a record of type
---    { main : TerraformConfig..., serverFoo : ServerConfig, serverBar... }
-
+-- See:
+--    http://www.haskellforall.com/2018/08/nixos-in-production.html
 
 -- TODO configurable EC2 instance type/size
 

@@ -65,6 +65,33 @@ S3BucketR =
 	}
 in
 
+let
+TextP = {k:Text,v:Text}
+in
+
+let
+-- TODO we could extend AwsAttribute with the Terraform built-in functions
+AwsAttributeSet = List TextP
+in
+let
+noAttrs = [] : List TextP
+in
+
+
+let
+AwsInstanceR =
+  -- Affects name of instance
+  -- You must create a ServerConfig (Nix expression) of the same name
+  { name : Text
+  -- Server config expression, which must exists in top-level, or TF will complain
+  , config : Text
+  -- Attributes of other objects to pass to config (TODO pass from self)
+  , configAttrs : AwsAttributeSet
+  -- Generate a set of static files (subpaths of /var/static)
+  , staticFiles : List { path : Text, content : Text }
+  }
+in
+
 --
 -- Defines AWS attribtues to query from Terraform resources or data sources.
 --
@@ -86,29 +113,13 @@ AwsAttribute =
 			| Region : {}
 			>
 		}
+  | AwsInstance :
+    { source : AwsInstanceR
+    , attr :
+      < PrivateIp : {}
+      >
+    }
   >
-in
-let
--- TODO we could extend AwsAttribute with the Terraform built-in functions
-AwsAttributeSet = List AwsAttribute
-in
-let
-noAttrs = [] : List AwsAttribute
-in
-
-
-let
-AwsInstanceR =
-  -- Affects name of instance
-  -- You must create a ServerConfig (Nix expression) of the same name
-  { name : Text
-  -- Server config expression, which must exists in top-level, or TF will complain
-  , config : Text
-  -- Attributes of other objects to pass to config (TODO pass from self)
-  , configAttrs : AwsAttributeSet
-  -- Generate a set of static files (subpaths of /var/static)
-  , staticFiles : List { path : Text, content : Text }
-  }
 in
 
 let
@@ -242,16 +253,18 @@ staticSiteFromPath = \(path : Text) ->
 in
 
 let
-awsSingle
-  = aws
-    [ AwsResources.AwsInstance
+awsInstanceShowingText = \(text : Text) ->
+    AwsResources.AwsInstance
       { name = "foo"
       , config = "serverConfig" -- TODO actually use
       , configAttrs = noAttrs
-      , staticFiles = [{path = "index.html", content = "Nothing to see here!"}]
+      , staticFiles = [{path = "index.html", content =  text}]
       }
-    ]
 in
+let
+awsSingle = aws [awsInstanceShowingText "Nothing to see here!"]
+in
+
 
 
 
@@ -278,10 +291,24 @@ exampleTwoServers =
       , staticFiles = [{path = "index.html", content = "This is bar, sir!"}]
       }
     ]
-    , server = staticSiteFromPath ""
+  , server = staticSiteFromPath ""
   }
 in
 
+let
+chainedServers =
+  let
+    s1 = awsInstanceShowingText "0"
+  in
+  let
+    s2 = awsInstanceShowingText
+        (getAttr (AwsAttributes.AwsInstance
+                {source = s1, attr = PrivateIp {=}}))
+  in
+  { main = aws [s1, s2]
+  , server = staticSiteFromPath ""
+  }
+in
 
 -- A single-node Gitlab instance
 -- Using a local PostgreSQL for persistence

@@ -397,44 +397,6 @@ in
 
 -- Examples
 
-{-
-let
-exampleTwoServers =
-  { main = aws
-    [ AwsResources.AwsInstance
-      { name = "foo"
-      , config = "serverConfig" -- TODO actually use
-      , configAttrs = AwsAttributes.None {=}
-      , staticFiles = [{path = "index.html", content = "This is foo, maam!"}]
-      }
-    , AwsResources.AwsInstance
-      { name = "bar"
-      , config = "serverConfig" -- TODO actually use
-      , configAttrs = noAttrs
-      , staticFiles = [{path = "index.html", content = "This is bar, sir!"}]
-      }
-    ]
-  , server = staticSiteFromPath ""
-  }
-in
--}
-
-{-
-let
-chainedServers =
-  let
-    s1 = awsInstanceShowingText "foo" "0"
-  in
-  let
-    s2 = awsInstanceShowingText "bar"
-        (getAttr (AwsAttributes.AwsInstancePrivateIp "foo"))
-  in
-  { main = aws [ AwsResources.AwsInstance s1
-               , AwsResources.AwsInstance s2]
-  }
-in
--}
-
 -- A single-node Gitlab instance
 -- Using a local PostgreSQL for persistence
 --
@@ -560,7 +522,8 @@ in
 -- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
 
 
--- A Consul cluster
+-- A Consul cluster of N servers and 0 clients
+-- TODO clients!
 let
 testConsul =
   let nMinus1 = 4

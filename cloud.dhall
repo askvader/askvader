@@ -207,35 +207,10 @@ showAwsResource = \(res : AwsResource) ->
             ''
           ) ""
       in
-          let
-          tmpCode =
+          -- TODO properly test chaining
+          -- E.g. what comes out of TF for attribtues of differnt types
+          -- Do we pass these to Dhall appropriately?
           ''
-          \(x : Text) ->
-            { virtualisation =
-              { docker =
-                { enable = True }
-              }
-            , users =
-              { users	=
-                { root =
-                  { extraGroups = ["docker"] }
-                }
-              }
-            }
-
-          ''
-          in
-          let
-          -- TODO
-          -- This has to be either a literal Dhall expression
-          -- OR
-          -- a Terraform splice that returns a Dhall expression of the correct
-          -- type.
-          tmpAttrExpr = "1"
-          in
-          -- TODO temporary tests
-          ''
-
           data "external" "${name}-eval" {
             program =
               [ "./eval"
@@ -404,6 +379,7 @@ exampleTwoServers =
 in
 -}
 
+{-
 let
 chainedServers =
   let
@@ -417,6 +393,7 @@ chainedServers =
                , AwsResources.AwsInstance s2]
   }
 in
+-}
 
 -- A single-node Gitlab instance
 -- Using a local PostgreSQL for persistence
@@ -429,6 +406,8 @@ in
 let
 testGitlab =
   let serverConfig =
+  ''
+\(_:{}) ->
 { networking =
 	{ firewall = { enable = True, allowedTCPPorts = [ 80 ] } }
   , services =
@@ -463,7 +442,7 @@ testGitlab =
         , otp = "devzJ0Tz0POiDBlrpWmcLltyiAdS8TtgT9YNBOoUcDsfppiY3IXZjMVtKgXrFImIennFGOpPN8IkP8ATXpRgDD5rxVnKuTTwYQaci2NtaV1XxOQGjdIE50VGsR3"
         , db = "uPgq1gtwwHiatiuE0YHqbGa5lEIXH7fMsvuTNgdzJi8P0Dg12gibTzBQbq5LT7PNzcc3BP9P1snHVnduqtGF43PgrQtU7XL93ts6gqe9CBNhjtaqUwutQUDkygP5NrV6"
         , jws =
-          ''
+          '''
 					-----BEGIN RSA PRIVATE KEY-----
 					MIIEpAIBAAKCAQEArrtx4oHKwXoqUbMNqnHgAklnnuDon3XG5LJB35yPsXKv/8GK
 					ke92wkI+s1Xkvsp8tg9BIY/7c6YK4SR07EWL+dB5qwctsWR2Q8z+/BKmTx9D99pm
@@ -491,14 +470,15 @@ testGitlab =
 					YHEa7UBPb5TEPSzWImQpETi2P5ywcUYL1EbN/nqPWmjFnat8wVmJtV4sUpJhubF4
 					Vqm9LxIWc1uQ1q1HDCejRIxIN3aSH+wgRS3Kcj8kCTIoXd1aERb04g==
 					-----END RSA PRIVATE KEY-----
-          ''
+          '''
         } -- TODO store secrets elsewhere
       , extraConfig = { gitlab = { default_projects_features = { builds = False } } }
       }
     }
   }
+  ''
   in
-  { main = awsSingle, server = serverConfig }
+  { main = awsSingleWith serverConfig }
 in
 
 
@@ -570,27 +550,11 @@ testConsul =
 in
 
 
-{-
-fun (X : sigT V) (Y : Type) (P : (forall Z : Type, V Z -> Y)) =>
-    sigT_rect (fun _ : sigT V => Y)
-              (fun (x : Type) (p : V x) =>
-                 (fun X1 : V x -> Y => (fun X2 : Y => X2) (X1 p)) (P x)) X.
-
-fun H : (forall Y : Type, (forall X : Type, V X -> Y) -> Y) =>
-    H (sigT V) (fun (X : Type) (Y : V X) => existT V X Y)
----
-Or something like
-		[forall (b:Type) -> (forall (a:Type) -> {r:Res a,c:Cons a} -> b) -> b]
-
--}
-
--- Main
-
 let
 empty = { main = aws ([] : List AwsResource) }
 in
 
-testDocker
+testGitlab
 
 
 

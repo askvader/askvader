@@ -56,62 +56,6 @@ in
 --
 -- AWS
 --
-
-let
-CannedACL =
-	< Private : {}
-	| PublicRead : {}
-	| PublicReadWrite : {}
-	>
-	-- TODO ...
-in
-let
-S3BucketR =
-  { resourceName : Text
-  , bucketName : Optional Text
-  , acl : Optional CannedACL
-	}
-in
-
-let
-TextP = {k:Text,v:Text}
-in
-
-let
--- TODO we could extend AwsAttribute with the Terraform built-in functions
--- This is not needed for *server configs* as they have access to Dhall functions, but
--- may be useful for other TF resources
-AwsAttributeSet = List TextP
-in
-let
-noAttrs = [] : List TextP
-in
-
-
-let
-
-
-AwsInstanceR =
-  -- Affects name of instance
-  -- You must create a ServerConfig (Nix expression) of the same name
-  { name : Text
-  -- Server config expression, which must exists in top-level, or TF will complain
-  , config : Text
-  -- Attributes of other objects to pass to config
-  , configAttrs : AwsAttributeSet
-  -- Generate a set of static files (subpaths of /var/static)
-  , staticFiles : List { path : Text, content : Text }
-  }
-in
-
---
--- Defines AWS attribtues to query from Terraform resources or data sources.
---
-let
-AwsInstanceA =
-      < PrivateIp : {}
-      >
-in
 -- TODO flatten for easier construction
 -- Could also provide extra records like:
 --      AwsAttributes.Instance.PrivateIp x
@@ -127,7 +71,7 @@ in
 -- ++++++
 --
 -- Problem: generate *safe* configs for multiple configurable resources (AWS instances, containers, pods etc)
--- The current hack allows only one config and no passing of data from Terraform (though passing from the init config is OK)
+-- The current hack allows only one config and no passing of data from Terraform (though passing from the init attr is OK)
 -- Note that the type-safe configs are really dhall functions to be applied *as Terraform runs*.
 --
 --   Idea 0
@@ -164,27 +108,51 @@ in
 --    Note that we can never make the configuration of instance X depend on TF properties of X
 --    This is OK, properties are only used for 'downstream' resources in TF
 let
+-- The wrapped value is the name of the resource (always)
 AwsAttribute =
-	< S3BucketData :
-		{ source : S3BucketR
-		, attr :
-			< Id : {}
-			| Region : {}
-			>
-		}
-  | AwsInstance :
-    -- TODO FIXME switch to use name here and restore use of attributes in resource definition
-    -- (ideally this would be a recursive dependency!)
-    -- In other words make Resources -[depend on]-> Attributes
-    -- further down, provide safe wrappers for these constructors that take (Resource * AttributeName) and unwraps the name
-    { source : AwsInstanceR
-    , attr : AwsInstanceA
-    }
+	< S3BucketId : Text
+  | S3BucketRegion : Text
+  | AwsInstancePrivateIp : Text
+  | None : {}
   >
 in
 
 let
 AwsAttributes = constructors AwsAttribute
+in
+
+
+let
+CannedACL =
+	< Private : {}
+	| PublicRead : {}
+	| PublicReadWrite : {}
+	>
+	-- TODO ...
+in
+let
+S3BucketR =
+  { resourceName : Text
+  , bucketName : Optional Text
+  , acl : Optional CannedACL
+	}
+in
+
+
+let
+AwsInstanceR =
+  -- Affects name of instance
+  -- You must create a ServerConfig (Nix expression) of the same name
+  { name : Text
+  -- Config expression
+  -- Must be Dhall function of type (A -> B) where A is the type corresponding
+  -- to the value of configAttrs and B is a valid Nix expression.
+  , config : Text
+  -- Attribute to pass to the configuration
+  , configAttr : AwsAttribute
+  -- Generate a set of static files (subpaths of /var/static)
+  , staticFiles : List { path : Text, content : Text }
+  }
 in
 
 
@@ -196,6 +164,22 @@ AwsResource =
 in
 let
 AwsResources = constructors AwsResource
+in
+
+
+-- Returns a Terraform splice for the given attribute or "{=}" for no attribute
+let
+getAttr = \(attr : AwsAttribute) ->
+    merge
+    { AwsInstancePrivateIp = \(name:Text) ->
+        ''
+        ''${aws_instance.${name}.private_ip}''
+    , S3BucketId = \(name:Text) -> "TODO"
+    , S3BucketRegion = \(name:Text) -> "TODO"
+    , None = \(_:{}) -> "{=}"
+    }
+    attr
+    : Text
 in
 
 
@@ -226,7 +210,7 @@ showAwsResource = \(res : AwsResource) ->
           let
           tmpCode =
           ''
-          \(x : Natural) ->
+          \(x : Text) ->
             { virtualisation =
               { docker =
                 { enable = True }
@@ -247,7 +231,7 @@ showAwsResource = \(res : AwsResource) ->
           -- OR
           -- a Terraform splice that returns a Dhall expression of the correct
           -- type.
-          tmpAttrExpr = "122"
+          tmpAttrExpr = "1"
           in
           -- TODO temporary tests
           ''
@@ -257,11 +241,11 @@ showAwsResource = \(res : AwsResource) ->
               [ "./eval"
               // Pass code as first argument
               , <<EOF
-              ${tmpCode}
+              ${instance.config}
               EOF
               // As all attributes are single values, we can pass them as
               // arguments for now
-              , "${tmpAttrExpr}"
+              , "${getAttr instance.configAttr}"
               ]
             query =
               {
@@ -314,21 +298,6 @@ showAwsResource = \(res : AwsResource) ->
   : Text
 in
 
--- Returns a Terraform splice for the given attribute
-let
-getAttr = \(attr : AwsAttribute) ->
-    merge
-    { S3BucketData = \(x:{source:S3BucketR,attr:<Id:{}|Region:{}>})->
-      "TODO"
-    , AwsInstance = \(x:{source:AwsInstanceR,attr:
-      <PrivateIp:{}>})->
-        ''
-        ''${aws_instance.${x.source.name}.private_ip}''
-    }
-    attr
-    : Text
-in
-
 -- Transform a list of AWS resources into a Terraform config
 let
   aws = \(resources : List AwsResource) ->
@@ -349,34 +318,37 @@ in
 -- High-level resources
 --
 
-let
-StaticHTTPServer =
-  { networking :
-      { firewall : { enable : Bool, allowedTCPPorts : List Natural } }
-  , services :
-      { nginx : { enable : Bool, virtualHosts : { site : { root : Text } } } }
-  }
-in
-
--- Serve a static HTTP site on port 80 from the given path
--- All paths are relative to /var/static, pass "" to serve that entire directory
--- Hint: combine with staticFiles to generate content
-let
-staticSiteFromPath = \(path : Text) ->
-  { networking =
-      { firewall = { enable = True, allowedTCPPorts = [ 80 ] } }
-  , services =
-      { nginx =
-          { enable = True, virtualHosts = { site = { root = "/var/static" ++ path } } }
-      }
-  } : StaticHTTPServer
-in
 
 let
 awsInstanceShowingText = \(name : Text) -> \(text : Text) ->
       { name = name
-      , config = "serverConfig" -- TODO actually use
-      , configAttrs = noAttrs
+      , config =
+      ''
+        let
+        StaticHTTPServer =
+          { networking :
+              { firewall : { enable : Bool, allowedTCPPorts : List Natural } }
+          , services :
+              { nginx : { enable : Bool, virtualHosts : { site : { root : Text } } } }
+          }
+        in
+
+        -- Serve a static HTTP site on port 80 from the given path
+        -- All paths are relative to /var/static, pass "" to serve that entire directory
+        -- Hint: combine with staticFiles to generate content
+        let
+        staticSiteFromPath = \(path : Text) ->
+          { networking =
+              { firewall = { enable = True, allowedTCPPorts = [ 80 ] } }
+          , services =
+              { nginx =
+                  { enable = True, virtualHosts = { site = { root = "/var/static" ++ path } } }
+              }
+          } : StaticHTTPServer
+        in
+        \(_:{}) -> staticSiteFromPath ""
+      ''
+      , configAttr = AwsAttributes.None {=}
       , staticFiles = [{path = "index.html", content =  text}]
       }
 in
@@ -391,6 +363,17 @@ in
 
 
 
+let
+awsSingleWith = \(config : Text) -> aws [
+  AwsResources.AwsInstance
+      { name = "single"
+      , config = config
+      , configAttr = AwsAttributes.None {=}
+      , staticFiles = [{path = "index.html", content = "none"}]
+      }
+]
+in
+
 
 
 
@@ -399,13 +382,14 @@ in
 
 -- Examples
 
+{-
 let
 exampleTwoServers =
   { main = aws
     [ AwsResources.AwsInstance
       { name = "foo"
       , config = "serverConfig" -- TODO actually use
-      , configAttrs = noAttrs
+      , configAttrs = AwsAttributes.None {=}
       , staticFiles = [{path = "index.html", content = "This is foo, maam!"}]
       }
     , AwsResources.AwsInstance
@@ -418,6 +402,7 @@ exampleTwoServers =
   , server = staticSiteFromPath ""
   }
 in
+-}
 
 let
 chainedServers =
@@ -426,14 +411,10 @@ chainedServers =
   in
   let
     s2 = awsInstanceShowingText "bar"
-        (getAttr (AwsAttributes.AwsInstance
-                { source = s1
-                , attr = (constructors AwsInstanceA).PrivateIp {=}
-                }))
+        (getAttr (AwsAttributes.AwsInstancePrivateIp "foo"))
   in
   { main = aws [ AwsResources.AwsInstance s1
                , AwsResources.AwsInstance s2]
-  , server = staticSiteFromPath ""
   }
 in
 
@@ -525,6 +506,8 @@ in
 let
 testDocker =
   let serverConfig =
+  ''
+  \(_:{}) ->
 	{ virtualisation =
 		{ docker =
 			{ enable = True }
@@ -536,8 +519,9 @@ testDocker =
 			}
 		}
 	}
+  ''
   in
-  { main = awsSingle, server = serverConfig }
+  { main = awsSingleWith serverConfig }
 in
 
 
@@ -603,10 +587,10 @@ Or something like
 -- Main
 
 let
-empty = { main = aws ([] : List AwsResource), server = {=} }
+empty = { main = aws ([] : List AwsResource) }
 in
 
-testConsul
+testDocker
 
 
 

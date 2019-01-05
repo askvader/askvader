@@ -4,6 +4,9 @@
 let
 concatMap = https://prelude.dhall-lang.org/Text/concatMap
 in
+let
+generate = https://prelude.dhall-lang.org/List/generate
+in
 
 -- let Dict = \(a : Type) -> List { mapKey : Text, mapValue : a } in
 -- let JSON = <A : List JSON | O : Dict JSON | N : Natural | S : Text > in
@@ -557,11 +560,11 @@ in
 -- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
 
 
--- A single node Consul cluster based on NixOS
--- TODO >1
---
+-- A Consul cluster
 let
 testConsul =
+  let nMinus1 = 4
+  in
   let config =
   ''
   \(peer : Text) ->
@@ -576,7 +579,7 @@ testConsul =
 			{ enable = True
 			, extraConfig =
 				{ server = True
-				, bootstrap_expect = 1
+				, bootstrap_expect = ${Natural/show (nMinus1 + 1)}
 				, ui = True
 				-- TODO exposes API without any ACL, dangerous!
   			, bind_addr = "{{GetPrivateIP}}"
@@ -589,21 +592,24 @@ testConsul =
   ''
   in
   { main =
-    aws
+    aws (
     [ AwsResources.AwsInstance
-      { name = "c1"
+      { name = "c"
       -- TODO use a config that exludes the peer field for the first node
       , config = "(" ++ config ++ ")\"127.0.0.1\""
       , configAttrs = [] : List AwsAttribute
       , staticFiles = [{path = "index.html", content = "none"}]
       }
-    , AwsResources.AwsInstance
-      { name = "c2"
-      , config = config
-      , configAttrs = [AwsAttributes.AwsInstancePrivateIp "c1"]
-      , staticFiles = [{path = "index.html", content = "none"}]
-      }
     ]
+    #
+    generate nMinus1 AwsResource (\(n : Natural) ->
+      AwsResources.AwsInstance
+        { name = "c" ++ Natural/show n
+        , config = config
+        , configAttrs = [AwsAttributes.AwsInstancePrivateIp "c"]
+        , staticFiles = [{path = "index.html", content = "none"}]
+        })
+    )
   }
 in
 

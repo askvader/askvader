@@ -242,25 +242,14 @@ showAwsResource = \(res : AwsResource) ->
           ''
           in
           let
+          -- TODO
+          -- This has to be either a literal Dhall expression
+          -- OR
+          -- a Terraform splice that returns a Dhall expression of the correct
+          -- type.
           tmpAttrExpr = "122"
           in
           -- TODO temporary tests
-
-          -- TODO also write conf Dhall code + conf attr type to files for verification
-
-
-          -- TODO write spec code as tmp-conf-a-${name}.dhall
-          -- TODO write spec value as tmp-conf-b-${name}.dhall
-
-          -- TODO create ./eval script
-          --    Recieves two dhall files f and x, compiles (f x) to Nix and returns a JSON object {"nix{: "...nix code..."}
-          --    On error, print error to stderr and return non-0
-          --
-          -- TODO better way to get unique name of code file?
-          -- Here we rely on the fact that TF resources must have unique names anyway
-          -- (pushing complexity to the caller).
-          --
-          -- Ideally we'd hash the code or use a State monad to supply the names.
           ''
 
           data "external" "${name}-eval" {
@@ -302,9 +291,6 @@ showAwsResource = \(res : AwsResource) ->
               private_key = "''${file("~/.aws/${standardAwsOptions.keyName}.pem")}"
             }
             provisioner "file" {
-              // TODO this name is hardcoded in ./deploy
-              // source      = "tmp.nix"
-
               content = "''${data.external.${name}-eval.result.nix}"
               destination = "/etc/nixos/configuration.nix"
             }
@@ -328,6 +314,7 @@ showAwsResource = \(res : AwsResource) ->
   : Text
 in
 
+-- Returns a Terraform splice for the given attribute
 let
 getAttr = \(attr : AwsAttribute) ->
     merge
@@ -619,7 +606,7 @@ let
 empty = { main = aws ([] : List AwsResource), server = {=} }
 in
 
-chainedServers
+testConsul
 
 
 

@@ -7,15 +7,13 @@ main = do
 
   [confCode,attrCode] <- getArgs
   let fullCode = "(" ++ confCode ++ ") (" ++ attrCode ++ ")"
-  nixExpr <- readProcess "dhall-to-nix" [] fullCode
+  nixExpr1 <- readProcess "dhall-to-nix" [] fullCode
 
-  -- TODO prepend "pre.nix"
   pre <- readFile "pre.nix"
+  let nixExpr = pre ++ nixExpr1
 
   -- DEBUG
-  writeFile "tmp.nix" $ pre ++ nixExpr
+  writeFile "tmp.nix" $ nixExpr
 
-  -- TODO read 2 files and evaluate, see comment in cloud.dhall
-  -- nixExpr <- readFile "tmp.nix"
   -- Escape the nixExpr
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"

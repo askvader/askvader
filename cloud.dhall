@@ -339,15 +339,6 @@ awsInstanceShowingText = \(name : Text) -> \(text : Text) ->
       { name = name
       , config =
       ''
-        let
-        StaticHTTPServer =
-          { networking :
-              { firewall : { enable : Bool, allowedTCPPorts : List Natural } }
-          , services :
-              { nginx : { enable : Bool, virtualHosts : { site : { root : Text } } } }
-          }
-        in
-
         -- Serve a static HTTP site on port 80 from the given path
         -- All paths are relative to /var/static, pass "" to serve that entire directory
         -- Hint: combine with staticFiles to generate content
@@ -359,21 +350,13 @@ awsInstanceShowingText = \(name : Text) -> \(text : Text) ->
               { nginx =
                   { enable = True, virtualHosts = { site = { root = "/var/static" ++ path } } }
               }
-          } : StaticHTTPServer
+          }
         in
         staticSiteFromPath ""
       ''
       , configAttrs = [] : List AwsAttribute
       , staticFiles = [{path = "index.html", content =  text}]
       }
-in
-let
-awsSingle = aws [
-  AwsResources.AwsInstance
-  (
-  awsInstanceShowingText "single" "Nothing to see here!"
-  )
-  ]
 in
 
 
@@ -409,7 +392,6 @@ let
 testGitlab =
   let serverConfig =
   ''
-\(_:{}) ->
 { networking =
 	{ firewall = { enable = True, allowedTCPPorts = [ 80 ] } }
   , services =
@@ -489,7 +471,6 @@ let
 testDocker =
   let serverConfig =
   ''
-  \(_:{}) ->
 	{ virtualisation =
 		{ docker =
 			{ enable = True }
@@ -581,7 +562,7 @@ let
 empty = { main = aws ([] : List AwsResource) }
 in
 
-testConsul
+testGitlab
 
 
 

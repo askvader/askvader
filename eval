@@ -5,22 +5,20 @@ import System.Process
 
 main = do
 
-  [confCode,attrCode] <- getArgs
+  -- TODO support calling with N arguments...
+  args1 <- getArgs
 
+  -- TODO all arguments (except the first) comes from Terraform splices
+  -- Not sure what the format is, except that strings come unescaped
+  -- We escape strings for now and worry about other types later
+  let args = head args1 : fmap show (tail args1)
 
-  let fullCode = "(" ++ confCode ++ ") (" ++ attrCode ++ ")"
-
-  -- DEBUG
-  writeFile "tmp.out"  fullCode
-
+  let fullCode = concatMap (("("++) . (++")")) args
 
   nixExpr1 <- readProcess "dhall-to-nix" [] fullCode
 
   pre <- readFile "pre.nix"
   let nixExpr = pre ++ nixExpr1
-
-  -- DEBUG
-  writeFile "tmp.nix" $ nixExpr
 
   -- Escape the nixExpr
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"

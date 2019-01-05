@@ -1,6 +1,9 @@
 
 -- TODO pin prelude using
 --    dhall resolve
+let
+concatMap = https://prelude.dhall-lang.org/Text/concatMap
+in
 
 -- let Dict = \(a : Type) -> List { mapKey : Text, mapValue : a } in
 -- let JSON = <A : List JSON | O : Dict JSON | N : Natural | S : Text > in
@@ -107,14 +110,47 @@ in
 --
 --    Note that we can never make the configuration of instance X depend on TF properties of X
 --    This is OK, properties are only used for 'downstream' resources in TF
-let
 -- The wrapped value is the name of the resource (always)
+
+
+
+
+
+-- In Terraform attributes provide 'delayed' values that become availible as
+-- the resource graph is traversed and a resource is created.
+-- We currently only support attributes of the following types:
+--    Text
+--    Natural
+--    Boolean
+--
+-- Attributes can be used when defining resources, which implies a dependency.
+-- Note recursive resource dependencies are *not* allowed, the resource graph
+-- must be a DAG.
+--
+-- You can pass an arbirary number of attributes to a server or container
+-- configuration expression. They types must correspond, e.g.
+--
+--    { config = \(x : Text) -> \(y : Optional Text) -> ...
+--    , attributes = [someTextAttr, someOptionalAttr...]
+--    ... }
+--
+let
 AwsAttribute =
-	< S3BucketId : Text
-  | S3BucketRegion : Text
-  | AwsInstancePrivateIp : Text
-  | None : {}
+  < S3BucketId : Text -- { name : Text }
+  | S3BucketRegion : Text -- { name : Text }
+  | AwsInstancePrivateIp : Text -- { name : Text }
   >
+in
+
+-- Returns the Dhall type of the given AwsAttribute
+let
+typeOf = \(x : AwsAttribute) ->
+  merge
+  { S3BucketId = \(_:Text) -> "Text"
+  , S3BucketRegion = \(_:Text) -> "Text"
+  , AwsInstancePrivateIp = \(_:Text) -> "Text"
+  }
+  x : Text
 in
 
 let
@@ -148,8 +184,8 @@ AwsInstanceR =
   -- Must be Dhall function of type (A -> B) where A is the type corresponding
   -- to the value of configAttrs and B is a valid Nix expression.
   , config : Text
-  -- Attribute to pass to the configuration
-  , configAttr : AwsAttribute
+  -- Attributes to pass to the configuration
+  , configAttrs : List AwsAttribute
   -- Generate a set of static files (subpaths of /var/static)
   , staticFiles : List { path : Text, content : Text }
   }
@@ -182,7 +218,6 @@ showAwsResource = \(res : AwsResource) ->
           ''${aws_instance.${name}.private_ip}''
       , S3BucketId = \(name:Text) -> "TODO"
       , S3BucketRegion = \(name:Text) -> "TODO"
-      , None = \(_:{}) -> "{=}"
       }
       attr
       : Text
@@ -207,6 +242,13 @@ showAwsResource = \(res : AwsResource) ->
             ''
           ) ""
       in
+      let
+        showAttrBlock = \(x : AwsAttribute) ->
+          ", \"${getAttr x}\"\n"
+      in
+      let
+        attrBlock = concatMap AwsAttribute showAttrBlock instance.configAttrs
+      in
           -- TODO properly test chaining
           -- E.g. what comes out of TF for attribtues of differnt types
           -- Do we pass these to Dhall appropriately?
@@ -218,9 +260,7 @@ showAwsResource = \(res : AwsResource) ->
               , <<EOF
               ${instance.config}
               EOF
-              // As all attributes are single values, we can pass them as
-              // arguments for now
-              , "${getAttr instance.configAttr}"
+              ${attrBlock}
               ]
             query =
               {
@@ -278,10 +318,7 @@ let
   aws = \(resources : List AwsResource) ->
     standardProviders
     ++
-    (
-    let concatMap = https://prelude.dhall-lang.org/Text/concatMap in
     (concatMap AwsResource showAwsResource resources)
-    )
 in
 
 
@@ -321,9 +358,9 @@ awsInstanceShowingText = \(name : Text) -> \(text : Text) ->
               }
           } : StaticHTTPServer
         in
-        \(_:{}) -> staticSiteFromPath ""
+        staticSiteFromPath ""
       ''
-      , configAttr = AwsAttributes.None {=}
+      , configAttrs = [] : List AwsAttribute
       , staticFiles = [{path = "index.html", content =  text}]
       }
 in
@@ -343,7 +380,7 @@ awsSingleWith = \(config : Text) -> aws [
   AwsResources.AwsInstance
       { name = "single"
       , config = config
-      , configAttr = AwsAttributes.None {=}
+      , configAttrs = [] : List AwsAttribute
       , staticFiles = [{path = "index.html", content = "none"}]
       }
 ]
@@ -525,9 +562,9 @@ in
 --
 let
 testConsul =
-  let serverConfig =
+  let config =
   ''
-  \(_:{}) ->
+  \(peer : Text) ->
 	{ networking =
 		-- TODO on AWS, also requires 8500 to be in the Security Group
 		-- TODO seems to work even with NixOS firewall disallowing 8500
@@ -544,13 +581,30 @@ testConsul =
 				-- TODO exposes API without any ACL, dangerous!
   			, bind_addr = "{{GetPrivateIP}}"
         , client_addr = "0.0.0.0"
-				}
+        , retry_join = [peer]
+        }
 			}
 		}
 	}
   ''
   in
-  { main = awsSingleWith serverConfig }
+  { main =
+    aws
+    [ AwsResources.AwsInstance
+      { name = "c1"
+      -- TODO use a config that exludes the peer field for the first node
+      , config = "(" ++ config ++ ")\"127.0.0.1\""
+      , configAttrs = [] : List AwsAttribute
+      , staticFiles = [{path = "index.html", content = "none"}]
+      }
+    , AwsResources.AwsInstance
+      { name = "c2"
+      , config = config
+      , configAttrs = [AwsAttributes.AwsInstancePrivateIp "c1"]
+      , staticFiles = [{path = "index.html", content = "none"}]
+      }
+    ]
+  }
 in
 
 

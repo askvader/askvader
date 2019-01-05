@@ -223,6 +223,29 @@ showAwsResource = \(res : AwsResource) ->
             ''
           ) ""
       in
+          let
+          tmpCode =
+          ''
+          \(x : Natural) ->
+            { virtualisation =
+              { docker =
+                { enable = True }
+              }
+            , users =
+              { users	=
+                { root =
+                  { extraGroups = ["docker"] }
+                }
+              }
+            }
+
+          ''
+          in
+          let
+          tmpAttrExpr = "122"
+          in
+          -- TODO temporary tests
+
           -- TODO also write conf Dhall code + conf attr type to files for verification
 
 
@@ -239,9 +262,21 @@ showAwsResource = \(res : AwsResource) ->
           --
           -- Ideally we'd hash the code or use a State monad to supply the names.
           ''
+
           data "external" "${name}-eval" {
-            program = ["./eval", "tmp-${name}.dhall"]
-            query = {}
+            program =
+              [ "./eval"
+              // Pass code as first argument
+              , <<EOF
+              ${tmpCode}
+              EOF
+              // As all attributes are single values, we can pass them as
+              // arguments for now
+              , "${tmpAttrExpr}"
+              ]
+            query =
+              {
+              }
           }
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
@@ -281,6 +316,7 @@ showAwsResource = \(res : AwsResource) ->
             ${staticFileBlock}
             provisioner "remote-exec" {
               inline = [
+                "cat /etc/nixos/configuration.nix",
                 "nixos-rebuild switch"
               ]
             }

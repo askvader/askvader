@@ -1,10 +1,21 @@
 #!/usr/bin/env runghc
 
 import System.Environment
-
+import System.Process
 
 main = do
+
+  [confCode,attrCode] <- getArgs
+  let fullCode = "(" ++ confCode ++ ") (" ++ attrCode ++ ")"
+  nixExpr <- readProcess "dhall-to-nix" [] fullCode
+
+  -- TODO prepend "pre.nix"
+  pre <- readFile "pre.nix"
+
+  -- DEBUG
+  writeFile "tmp.nix" $ pre ++ nixExpr
+
   -- TODO read 2 files and evaluate, see comment in cloud.dhall
-  nixExpr <- readFile "tmp.nix"
+  -- nixExpr <- readFile "tmp.nix"
   -- Escape the nixExpr
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"

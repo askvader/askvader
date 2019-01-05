@@ -167,26 +167,26 @@ AwsResources = constructors AwsResource
 in
 
 
--- Returns a Terraform splice for the given attribute or "{=}" for no attribute
-let
-getAttr = \(attr : AwsAttribute) ->
-    merge
-    { AwsInstancePrivateIp = \(name:Text) ->
-        ''
-        ''${aws_instance.${name}.private_ip}''
-    , S3BucketId = \(name:Text) -> "TODO"
-    , S3BucketRegion = \(name:Text) -> "TODO"
-    , None = \(_:{}) -> "{=}"
-    }
-    attr
-    : Text
-in
 
 
 -- Render an AWS resource in HCL as understood by terraform
 -- Generates one or more 'resource' blocks
 let
 showAwsResource = \(res : AwsResource) ->
+  -- Returns a Terraform splice for the given attribute or "{=}" for no attribute
+  let
+  getAttr = \(attr : AwsAttribute) ->
+      merge
+      { AwsInstancePrivateIp = \(name:Text) ->
+          ''
+          ''${aws_instance.${name}.private_ip}''
+      , S3BucketId = \(name:Text) -> "TODO"
+      , S3BucketRegion = \(name:Text) -> "TODO"
+      , None = \(_:{}) -> "{=}"
+      }
+      attr
+      : Text
+  in
   merge
     { S3Bucket = \(bucket : S3BucketR) ->
 				"TODO"

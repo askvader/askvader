@@ -526,12 +526,14 @@ in
 let
 testConsul =
   let serverConfig =
+  ''
+  \(_:{}) ->
 	{ networking =
 		-- TODO on AWS, also requires 8500 to be in the Security Group
 		-- TODO seems to work even with NixOS firewall disallowing 8500
 		-- Is this firewall ignored on EC2?
-		{ firewall = { enable = True
-		, allowedTCPPorts = [ 80 ] } }
+		{ firewall = { enable = False
+		, allowedTCPPorts = [ 80, 8500 ] } }
 	, services =
 		{ consul =
 			{ enable = True
@@ -540,13 +542,15 @@ testConsul =
 				, bootstrap_expect = 1
 				, ui = True
 				-- TODO exposes API without any ACL, dangerous!
-  			, client_addr = "0.0.0.0"
+  			, bind_addr = "{{GetPrivateIP}}"
+        , client_addr = "0.0.0.0"
 				}
 			}
 		}
 	}
+  ''
   in
-  { main = awsSingle, server = serverConfig }
+  { main = awsSingleWith serverConfig }
 in
 
 
@@ -554,7 +558,7 @@ let
 empty = { main = aws ([] : List AwsResource) }
 in
 
-testGitlab
+testConsul
 
 
 

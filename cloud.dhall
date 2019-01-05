@@ -8,12 +8,6 @@ let
 generate = https://prelude.dhall-lang.org/List/generate
 in
 
--- let Dict = \(a : Type) -> List { mapKey : Text, mapValue : a } in
--- let JSON = <A : List JSON | O : Dict JSON | N : Natural | S : Text > in
-
-
-
-
 
 
 -- Terraform providers used by the code we generate
@@ -68,57 +62,9 @@ in
 --      AwsAttributes.Text.Instance.PrivateIp x
 --      AwsAttributes.Bool.Instance.AssociatePublicIpAddress
 --
--- Is getAttr ugly?
--- Not too bad, seing as we can't pattern match on strings in Dhall :)
---
--- In other words, this pattern 'solves' how to get values from Terraform to 'splice' back into the TF output
--- It can even be made type-safe, by defining a separate AwsAttribute for different typs as per above
---
--- ++++++
---
--- Problem: generate *safe* configs for multiple configurable resources (AWS instances, containers, pods etc)
--- The current hack allows only one config and no passing of data from Terraform (though passing from the init attr is OK)
--- Note that the type-safe configs are really dhall functions to be applied *as Terraform runs*.
---
---   Idea 0
---      Skip dhall-to-nix et al, define Dhall *ADT* for resources
---      Populate these with (Either Text TextAttr) etc for all attribute types
---      Conver them to JSON/Nix/Bash/etc with TF splices which is transferred to the resource
---
---      *Type safe?* Yes! The resource can ask for an Attr of the correct type
---      Drawback: Defining these ADTs is a lot of work
---
---   Idea 1
---     Configurable resources (AWS instances, containers, etc) are represented as Dhall code in a *Text* value
---     The inner code is a function of the expected resources to (currently) some unknown, non-function type (e.g. different types for different Nix configurations)
---     For each resource, allow passing of attributes (or Text), a la
---
---        AwsInstance
---          { name = "foo"
---          , config =
---              { code = "..." -- dhall code of type (Bool -> C)
---              , data = AwsAttributes.Bool.Instance.AssociatePublicIpAddress someInstance
---              }
---          }
---     Compile this to TF code that:
---        - Provisions an 'external' data source 'foo-eval',
---        - This invokes Dhall passing along the code applied to the data (spliced in using getAttr)
---        - (Assuming evaluation succeeds) provisions 'foo', with access to 'foo-eval.result'
---
---    How to make this type-safe?
---
---    Write both code and data to a separate file and check that they match (using 'dhall type')
---    before invoking Terraform.
---    NOTE even without this deploy will fail, but may succeed partially (so not ideal UX)
---
---    Note that we can never make the configuration of instance X depend on TF properties of X
---    This is OK, properties are only used for 'downstream' resources in TF
--- The wrapped value is the name of the resource (always)
 
 
-
-
-
+--
 -- In Terraform attributes provide 'delayed' values that become availible as
 -- the resource graph is traversed and a resource is created.
 -- We currently only support attributes of the following types:
@@ -145,7 +91,9 @@ AwsAttribute =
   >
 in
 
+--
 -- Returns the Dhall type of the given AwsAttribute
+--
 let
 typeOf = \(x : AwsAttribute) ->
   merge

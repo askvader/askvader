@@ -513,6 +513,21 @@ in
 testGitlab
 
 
+-- TODO AMI user creation
+
+-- TODO S3 bucket creation/addition
+
+-- TODO redis cluster (either ElastiCache or EC2+NixOS)
+
+-- TODO RDS instance + user + database
+
+-- TODO setup custom VPC with private subnet?
+
+-- TODO extend Docker/NixOS/EC2 to build a static set of containers
+
+-- TODO Gitlab + Pipeline that builds docker images (isolated from Internet to assure pure functin of commit)
+--  + orchestration in k8s/EKS or Nomad/NixOS/EC2
+
 
 -- TODO pin nixpkgs on the machines/AMI?
 -- See:

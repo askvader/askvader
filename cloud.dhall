@@ -117,14 +117,42 @@ CannedACL =
 	-- TODO ...
 	>
 in
+
+let
+VersioningOptions = { mfaDelete : Bool }
+in
+
 let
 S3BucketR =
   { resourceName : Text
   , bucketName : Optional Text
   , acl : Optional CannedACL
-	}
+	, versioning : Optional VersioningOptions
+  }
 in
 
+let
+Blob = List Natural -- All values >255 are normalized as 0
+in
+
+let
+S3BucketObjectSource =
+  < Utf8 : Text -- TODO what is Dhall text?
+                -- Following dhall-haskell it is Data.Text.Text, which has a canonical binary representation (UTF8)
+                -- We should use that!
+  | Binary : Blob
+  >
+in
+
+let
+S3BucketObjectR =
+  { bucketName : Text
+  , key : Text
+  , source : S3BucketObjectSource
+  }
+in
+
+-- TODO static website example using S3 bucket w. PublicRead
 
 let
 AwsInstanceR =
@@ -147,6 +175,7 @@ let
 AwsResource =
   < AwsInstance : AwsInstanceR
   | S3Bucket : S3BucketR
+  | S3BucketObject : S3BucketObjectR
   >
 in
 let
@@ -175,6 +204,8 @@ showAwsResource = \(res : AwsResource) ->
   in
   merge
     { S3Bucket = \(bucket : S3BucketR) ->
+				"TODO"
+    , S3BucketObject = \(object : S3BucketObjectR) ->
 				"TODO"
 		, AwsInstance = \(instance : AwsInstanceR) ->
       let

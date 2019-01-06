@@ -513,7 +513,8 @@ in
 testGitlab
 
 
--- TODO AMI user creation
+-- TODO IAM user creation
+-- TODO IAM user/group/role/policy (e.g. create S3 bucket and give access to single instance)
 
 -- TODO S3 bucket creation/addition
 
@@ -522,6 +523,8 @@ testGitlab
 -- TODO RDS instance + user + database
 
 -- TODO setup custom VPC with private subnet?
+
+-- TODO test SNS
 
 -- TODO extend Docker/NixOS/EC2 to build a static set of containers
 

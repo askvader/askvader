@@ -37,7 +37,7 @@ standardAwsOptions =
   -- Nixos 18.09
   { ami = "ami-0dada3805ce43c55e"
   , keyName = "admin"
-	, instanceType = "t2.micro"
+	, instanceType = "t2.medium"
   -- instance_type   = "m5d.2xlarge"
 	-- , instanceType   = "t2.medium"
 		-- instance_type = "i3.xlarge"
@@ -114,8 +114,8 @@ CannedACL =
 	< Private : {}
 	| PublicRead : {}
 	| PublicReadWrite : {}
-	>
 	-- TODO ...
+	>
 in
 let
 S3BucketR =
@@ -336,6 +336,8 @@ in
 --
 -- TODO this fails on the first deploy, only works on redeploy
 -- TF timeouts?
+--
+-- TODO does not work on t2.micro. t2.medium is OK
 let
 testGitlab =
   let serverConfig =
@@ -436,21 +438,6 @@ testDocker =
 in
 
 
--- TODO get TF to boot EKS cluster and run standard containers in there (e.g. consul cluster)
-
--- TODO NixOS machine with docker + standard consul image
--- E.g. as above, then run:
--- 		docker pull consul
--- 		docker run -t -i consul agent -bootstrap-expect=1 -server
-
-
--- TODO build custom Docker images using NixOS (preferably driven by expressions, similar to our NixOS provisioning)
---   See: https://nixos.wiki/wiki/Docker
-
--- TODO Consul cluster based on Docker+Kubernetes?
--- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
-
-
 -- A Consul cluster of N servers and 0 clients
 -- TODO clients!
 let
@@ -512,6 +499,13 @@ in
 
 testGitlab
 
+-- TODO do more: https://www.whizlabs.com/
+
+-- TODO FIXME If provisioner fails, EC2 instances are not tainted in TF (presumably because only the fake
+-- null resource we generate actually fails to provision - those were added to ensure the Nix config was
+-- always repushed - alternative way of doing that?).
+-- This is not always a problem. If we get "creation succeeds, provioner fails" because of a temoprary error
+-- in the NixOS script, we should just rerun the provisioner.
 
 -- TODO IAM user creation
 -- TODO IAM user/group/role/policy (e.g. create S3 bucket and give access to single instance)
@@ -530,6 +524,21 @@ testGitlab
 
 -- TODO Gitlab + Pipeline that builds docker images (isolated from Internet to assure pure functin of commit)
 --  + orchestration in k8s/EKS or Nomad/NixOS/EC2
+
+
+-- TODO get TF to boot EKS cluster and run standard containers in there (e.g. consul cluster)
+
+-- TODO NixOS machine with docker + standard consul image
+-- E.g. as above, then run:
+-- 		docker pull consul
+-- 		docker run -t -i consul agent -bootstrap-expect=1 -server
+
+
+-- TODO build custom Docker images using NixOS (preferably driven by expressions, similar to our NixOS provisioning)
+--   See: https://nixos.wiki/wiki/Docker
+
+-- TODO Consul cluster based on Docker+Kubernetes?
+-- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
 
 
 -- TODO pin nixpkgs on the machines/AMI?

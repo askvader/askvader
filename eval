@@ -1,7 +1,9 @@
 #!/usr/bin/env runghc
+{-# LANGUAGE OverloadedStrings #-}
 
 import System.Environment
 import System.Process
+import qualified Data.Text as Text
 
 main = do
 
@@ -18,7 +20,12 @@ main = do
   nixExpr1 <- readProcess "dhall-to-nix" [] fullCode
 
   pre <- readFile "pre.nix"
-  let nixExpr = pre ++ nixExpr1
+  let nixExpr = pre ++ dhallEscapes nixExpr1
 
   -- Escape the nixExpr
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"
+
+
+-- TODO some very unsafe escapes, as Dhall have stricter names than Nix lang...
+dhallEscapes :: String -> String
+dhallEscapes = Text.unpack . Text.replace "dhallEscapeSlash" "\"/\"" . Text.pack

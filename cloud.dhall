@@ -186,7 +186,7 @@ in
 let
 AwsIAMGroupR =
   { name : Text
-  , members : AwsIAMUserR
+  , members : List AwsIAMUserR
   }
 in
 
@@ -219,26 +219,17 @@ AwsResources = constructors AwsResource
 in
 
 let
-listFoldEmptySingle =
+foldMap =
   \(a : Type) ->
   \(xs : List a) ->
   \(r : Type) ->
-  \(handlers :
+  \(m :
     { empty : r
     , single : a -> r
     , compose : r -> r -> r
     } ) ->
-
-  -- TODO FIXME
-  {-
-  List/fold a xs r
-    (\(x : a) -> \(xs : r) ->
-      List/fold a xs r
-        (\(y : a) -> \(ys : r) -> handlers.empty) -- TODO
-        handlers.single
-      )
-  -}
-    handlers.empty
+  -- List/fold (m.compose . m.single) m.empty
+  List/fold a xs r (\(x : a) -> m.compose (m.single x)) m.empty
   : r
 in
 
@@ -251,7 +242,7 @@ concatMapSepBy =
   \(show : a -> Text) ->
   \(xs : List a) ->
     let inner =
-    listFoldEmptySingle a xs Text
+    foldMap a xs Text
     { empty = ""
     , single = show
     , compose = \(x : Text) -> \(y : Text) -> x ++ delim ++ y
@@ -295,7 +286,9 @@ showAwsResource = \(res : AwsResource) ->
 				"TODO"
 
     , AwsIAMGroup = \(x : AwsIAMGroupR) ->
-        let members = "TODO"
+        let members = concatMapSepBy
+          "[" "]" ","
+          AwsIAMUserR (\(y:AwsIAMUserR) -> "\"${y.name}\"") x.members
         in
         ''
         resource "aws_iam_group" "${x.name}" {
@@ -303,7 +296,7 @@ showAwsResource = \(res : AwsResource) ->
         }
         resource "aws_iam_group_membership" "${x.name}-membership" {
           name = "${x.name}-membership"
-          group = "${x.name}"
+          group = "''${aws_iam_group.${x.name}.name}"
           users = ${members}
         }
         ''
@@ -326,7 +319,7 @@ showAwsResource = \(res : AwsResource) ->
             }
             ${rs}
             ''
-          ) ""
+              ) ""
       in
       let
         showAttrBlock = \(x : AwsAttribute) ->
@@ -573,6 +566,22 @@ testDocker =
 in
 
 
+let
+testAwsIAM =
+  let alice = { name = "alice" }
+  in let bob = { name = "bob" }
+  in
+  { main = aws
+    [ AwsResources.AwsIAMUser alice
+    , AwsResources.AwsIAMUser bob
+    , AwsResources.AwsIAMGroup
+      { name = "people"
+      , members = [alice, bob]
+      }
+    ]
+  }
+in
+
 -- A Consul cluster of N servers and 0 clients
 -- TODO clients!
 let
@@ -632,7 +641,7 @@ let
 empty = { main = aws ([] : List AwsResource) }
 in
 
-testGitlab
+testDocker
 
 -- TODO do more: https://www.whizlabs.com/
 
@@ -641,8 +650,7 @@ testGitlab
 -- always repushed when it has changed - alternative way of doing that?).
 -- NOTE this is only a problem if the provisioner *breaks* the instance, e.g. by filling the harddrive
 
--- TODO IAM user creation
--- TODO IAM user/group/role/policy (e.g. create S3 bucket and give access to single instance)
+-- TODO IAM group/role/policy (e.g. create S3 bucket and give access to single instance)
 
 -- TODO NOW S3 bucket creation/addition
 
@@ -681,3 +689,8 @@ testGitlab
 
 -- TODO configurable EC2 instance type/size
 
+-- TODO simple test suite
+-- Should take
+--    [{norosExpr:Text,expectedEndpoint:Text,timeout:Natural}]
+-- deploys a bunch of expressions in sequence and verifies the
+-- given URL comes up within the given time.

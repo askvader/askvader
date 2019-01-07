@@ -175,12 +175,36 @@ AwsInstanceR =
   }
 in
 
+let
+AwsIAMUserR =
+  {}
+in
+
+let
+AwsIAMGroupR =
+  {}
+in
+
+let
+AwsIAMRoleR =
+  {}
+in
+
+let
+AwsIAMPolicyR =
+  {}
+in
 
 let
 AwsResource =
   < AwsInstance : AwsInstanceR
   | S3Bucket : S3BucketR
   | S3BucketObject : S3BucketObjectR
+
+  | AwsIAMUser : AwsIAMUserR
+  | AwsIAMGroup : AwsIAMGroupR
+  | AwsIAMRole : AwsIAMRoleR
+  | AwsIAMPolicy : AwsIAMPolicyR
   >
 in
 let
@@ -214,7 +238,20 @@ showAwsResource = \(res : AwsResource) ->
 				"TODO"
     , S3BucketObject = \(object : S3BucketObjectR) ->
 				"TODO"
-		, AwsInstance = \(instance : AwsInstanceR) ->
+
+    , AwsIAMUser = \(x : AwsIAMUserR) ->
+				"TODO"
+
+    , AwsIAMGroup = \(x : AwsIAMGroupR) ->
+				"TODO"
+
+    , AwsIAMRole = \(x : AwsIAMRoleR) ->
+				"TODO"
+
+    , AwsIAMPolicy = \(x : AwsIAMPolicyR) ->
+				"TODO"
+
+    , AwsInstance = \(instance : AwsInstanceR) ->
       let
         name = instance.name
       in

@@ -85,9 +85,12 @@ in
 --
 let
 AwsAttribute =
+  -- TODO all these Texts refer to the TF resource name...
   < S3BucketId : Text -- { name : Text }
   | S3BucketRegion : Text -- { name : Text }
   | AwsInstancePrivateIp : Text -- { name : Text }
+  | AwsIAMUserARN : Text
+  | AwsIAMUserUniqueId : Text
   >
 in
 
@@ -100,6 +103,8 @@ typeOf = \(x : AwsAttribute) ->
   { S3BucketId = \(_:Text) -> "Text"
   , S3BucketRegion = \(_:Text) -> "Text"
   , AwsInstancePrivateIp = \(_:Text) -> "Text"
+  , AwsIAMUserARN = \(_:Text) -> "Text"
+  , AwsIAMUserUniqueId = \(_:Text) -> "Text"
   }
   x : Text
 in
@@ -198,6 +203,8 @@ showAwsResource = \(res : AwsResource) ->
           ''${aws_instance.${name}.private_ip}''
       , S3BucketId = \(name:Text) -> "TODO"
       , S3BucketRegion = \(name:Text) -> "TODO"
+      , AwsIAMUserARN = \(name:Text) -> "TODO"
+      , AwsIAMUserUniqueId = \(name:Text) -> "TODO"
       }
       attr
       : Text

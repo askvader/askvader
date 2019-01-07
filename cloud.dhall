@@ -181,9 +181,12 @@ AwsIAMUserR =
   }
 in
 
+-- AWS IAM Group
+-- In TF this generates both the aws_iam_group and aws_iam_group_membership resources.
 let
 AwsIAMGroupR =
   { name : Text
+  , members : AwsIAMUserR
   }
 in
 

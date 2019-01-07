@@ -218,8 +218,47 @@ let
 AwsResources = constructors AwsResource
 in
 
+let
+listFoldEmptySingle =
+  \(a : Type) ->
+  \(xs : List a) ->
+  \(r : Type) ->
+  \(handlers :
+    { empty : r
+    , single : a -> r
+    , compose : r -> r -> r
+    } ) ->
 
+  -- TODO FIXME
+  {-
+  List/fold a xs r
+    (\(x : a) -> \(xs : r) ->
+      List/fold a xs r
+        (\(y : a) -> \(ys : r) -> handlers.empty) -- TODO
+        handlers.single
+      )
+  -}
+    handlers.empty
+  : r
+in
 
+let
+concatMapSepBy =
+  \(pre : Text) ->
+  \(end : Text) ->
+  \(delim : Text) ->
+  \(a : Type) ->
+  \(show : a -> Text) ->
+  \(xs : List a) ->
+    let inner =
+    listFoldEmptySingle a xs Text
+    { empty = ""
+    , single = show
+    , compose = \(x : Text) -> \(y : Text) -> x ++ delim ++ y
+    }
+    in pre ++ inner ++ end
+  : Text
+in
 
 -- Render an AWS resource in HCL as understood by terraform
 -- Generates one or more 'resource' blocks
@@ -247,13 +286,27 @@ showAwsResource = \(res : AwsResource) ->
 				"TODO"
 
     , AwsIAMUser = \(x : AwsIAMUserR) ->
+        ''
+        resource "aws_iam_user" "${x.name}" {
+          name = "${x.name}"
+        }
+        ''
+    , AwsIAMRole = \(x : AwsIAMRoleR) ->
 				"TODO"
 
     , AwsIAMGroup = \(x : AwsIAMGroupR) ->
-				"TODO"
-
-    , AwsIAMRole = \(x : AwsIAMRoleR) ->
-				"TODO"
+        let members = "TODO"
+        in
+        ''
+        resource "aws_iam_group" "${x.name}" {
+          name = "${x.name}"
+        }
+        resource "aws_iam_group_membership" "${x.name}-membership" {
+          name = "${x.name}-membership"
+          group = "${x.name}"
+          users = ${members}
+        }
+        ''
 
     , AwsIAMPolicy = \(x : AwsIAMPolicyR) ->
 				"TODO"

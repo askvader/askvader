@@ -533,15 +533,14 @@ testGitlab
 -- TODO do more: https://www.whizlabs.com/
 
 -- TODO FIXME If provisioner fails, EC2 instances are not tainted in TF (presumably because only the fake
--- null resource we generate actually fails to provision - those were added to ensure the Nix config was
--- always repushed - alternative way of doing that?).
--- This is not always a problem. If we get "creation succeeds, provioner fails" because of a temoprary error
--- in the NixOS script, we should just rerun the provisioner.
+-- null resource we generate actually fails to provision - those were added to ensure the Nix config is
+-- always repushed when it has changed - alternative way of doing that?).
+-- NOTE this is only a problem if the provisioner *breaks* the instance, e.g. by filling the harddrive
 
 -- TODO IAM user creation
 -- TODO IAM user/group/role/policy (e.g. create S3 bucket and give access to single instance)
 
--- TODO S3 bucket creation/addition
+-- TODO NOW S3 bucket creation/addition
 
 -- TODO redis cluster (either ElastiCache or EC2+NixOS)
 
@@ -551,7 +550,7 @@ testGitlab
 
 -- TODO test SNS
 
--- TODO extend Docker/NixOS/EC2 to build a static set of containers
+-- TODO NOW extend Docker/NixOS/EC2 to build a static set of containers
 
 -- TODO Gitlab + Pipeline that builds docker images (isolated from Internet to assure pure functin of commit)
 --  + orchestration in k8s/EKS or Nomad/NixOS/EC2

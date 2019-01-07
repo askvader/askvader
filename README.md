@@ -2,7 +2,7 @@
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/aig30sypi5avyul/noros_logo.png" width="600">
 
-Noros is a library of cloud infrastructure written in Dhall. 
+Noros is a library of cloud infrastructure written in Dhall.
 
 It can be used describe Nix configurations and Docker containers, and supports deployment on AWS EC2, Kubernetes and NixOS. Terraform is used to bootstrap the infrastructure, though this is mostly hidden from the user.
 
@@ -12,6 +12,11 @@ It can be used describe Nix configurations and Docker containers, and supports d
 - Reproducible: Expressions are designed to work forever
 - Powerful: Use the full power of Dhall to generate arbitrarily complex setup
 - Safe: The type checker catches most errors before deployment
+
+### For devs - core design
+- `noros apply` should either fail or return a valid config - ideally catching failues before making any changes
+- `noros destroy` should undo entirety of last apply (similar to applying an empty config)
+- The (hash of the) single (resolved) expression should determine observable behaviour (e.g. no mutable dependencies, including local file system)
 
 --
 

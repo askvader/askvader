@@ -177,22 +177,26 @@ in
 
 let
 AwsIAMUserR =
-  {}
+  { name : Text
+  }
 in
 
 let
 AwsIAMGroupR =
-  {}
+  { name : Text
+  }
 in
 
 let
 AwsIAMRoleR =
-  {}
+  { assumeRolePolicy : Text
+  }
 in
 
 let
 AwsIAMPolicyR =
-  {}
+  { arn : Text
+  }
 in
 
 let

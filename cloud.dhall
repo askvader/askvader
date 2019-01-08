@@ -682,6 +682,7 @@ testDocker
 -- TODO Consul cluster based on Docker+Kubernetes?
 -- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
 
+-- TODO use packer to build AMIs/Docker containers
 
 -- TODO pin nixpkgs on the machines/AMI?
 -- See:
@@ -689,6 +690,11 @@ testDocker
 
 -- TODO configurable EC2 instance type/size
 
+-- TODO something like
+--    https://itnext.io/building-a-kubernetes-hybrid-cloud-with-terraform-fe15164b35fb
+
+
+--
 -- TODO simple test suite
 -- Should take
 --    [{norosExpr:Text,expectedEndpoint:Text,timeout:Natural}]

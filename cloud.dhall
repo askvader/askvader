@@ -643,6 +643,12 @@ in
 
 testDocker
 
+-- TODO make use of the following Kubernetes networking notes
+--    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).
+--
+--    In any private k8s network you have IPs for nodes ('actual' machines), Pods and Services (faked, using iptables).
+--    To expose them externally, use NodePort/LoadBalancer/Ingress
+
 -- TODO do more: https://www.whizlabs.com/
 
 -- TODO FIXME If provisioner fails, EC2 instances are not tainted in TF (presumably because only the fake

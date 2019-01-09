@@ -672,7 +672,8 @@ testDocker
 -- TODO test SNS
 
 -- TODO NOW extend Docker/NixOS/EC2 to build a static set of containers
--- Push results to ECS (for now(
+-- Push results to ECS (for now)
+-- Extend testDocker to also install Packer+Terraform, build images, and push to ECS
 
 -- TODO Gitlab + Pipeline that builds docker images (isolated from Internet to assure pure functin of commit)
 --  + orchestration in k8s/EKS or Nomad/NixOS/EC2

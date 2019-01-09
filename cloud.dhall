@@ -559,10 +559,8 @@ testDocker =
   -- Also add Packer
   , environment =
     { systemPackages =
-      [
-      -- TODO how to look up a nixpkgs member?
-      -- pkgs.packer
-      ] : List Text
+      [ { dhallEscapePacker = {=} }
+      ]
     }
 	, users =
 		{ users	=
@@ -708,7 +706,7 @@ testDocker
 
 -- TODO use packer to build AMIs/Docker containers
 
--- TODO pin nixpkgs on the machines/AMI?
+-- TODO [NOTE pinNixPkgs] pin nixpkgs on the machines/AMI?
 -- See:
 --    http://www.haskellforall.com/2018/08/nixos-in-production.html
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env runghc
+-- vi:syntax=haskell
 {-# LANGUAGE OverloadedStrings #-}
 
 import System.Environment
 import System.Process
+import Data.List (intercalate)
 import qualified Data.Text as Text
 
 main = do
@@ -19,13 +21,37 @@ main = do
 
   nixExpr1 <- readProcess "dhall-to-nix" [] fullCode
 
-  pre <- readFile "pre.nix"
-  let nixExpr = pre ++ dhallEscapes nixExpr1
+  let pre =
+              intercalate "\n"
+              [ "{ config, pkgs, ... }:"
+              , "({"
+              , "  imports = [ <nixpkgs/nixos/modules/virtualisation/amazon-image.nix> ];"
+              , "  ec2.hvm = true;"
+              , "}"
+              , "//"
+              ]
+
+  let post =
+              intercalate "\n"
+              [ ")"
+              ]
+  let nixExpr = pre ++ dhallEscapes nixExpr1 ++ post
 
   -- Escape the nixExpr
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"
 
-
--- TODO some very unsafe escapes, as Dhall have stricter names than Nix lang...
+-- |
+-- Some very unsafe escapes to insert arbitrary Dhall into the resulting Nix code.
+--
+-- Replaces
+--    dhallEscapeSlash -> "/"
+--    "dhallEscapeInline:X" -> X
+--
+-- TODO really implement the above behavior for dhallEscapeInline?
+-- TODO come up with something safer
 dhallEscapes :: String -> String
-dhallEscapes = Text.unpack . Text.replace "dhallEscapeSlash" "\"/\"" . Text.pack
+dhallEscapes =
+    Text.unpack
+  . Text.replace "{ dhallEscapePacker = {}; }" "pkgs.packer"
+  . Text.replace "dhallEscapeSlash" "\"/\""
+  . Text.pack

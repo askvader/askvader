@@ -555,6 +555,14 @@ testDocker =
 		{ docker =
 			{ enable = True }
 		}
+  -- Also add Packer
+  , environment =
+    { systemPackages =
+      [
+      -- TODO how to look up a nixpkgs member?
+      -- pkgs.packer
+      ]
+    }
 	, users =
 		{ users	=
 			{ root =
@@ -612,7 +620,8 @@ testConsul =
         , retry_join = [peer]
         }
 			}
-		}
+
+    }
 	}
   ''
   in
@@ -653,6 +662,7 @@ testDocker
 --    To expose them externally, use NodePort/LoadBalancer/Ingress
 
 -- TODO do more: https://www.whizlabs.com/
+--  Esp. the security certificates
 
 -- TODO FIXME If provisioner fails, EC2 instances are not tainted in TF (presumably because only the fake
 -- null resource we generate actually fails to provision - those were added to ensure the Nix config is
@@ -669,7 +679,7 @@ testDocker
 
 -- TODO setup custom VPC with private subnet?
 
--- TODO test SNS
+-- TODO test AWS SNS?
 
 -- TODO NOW extend Docker/NixOS/EC2 to build a static set of containers
 -- Push results to ECS (for now)

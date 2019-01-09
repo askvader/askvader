@@ -37,7 +37,8 @@ standardAwsOptions =
   -- Nixos 18.09
   { ami = "ami-0dada3805ce43c55e"
   , keyName = "admin"
-	, instanceType = "t2.medium"
+	, instanceType = "t2.micro"
+	-- , instanceType = "t2.medium"
   -- instance_type   = "m5d.2xlarge"
 	-- , instanceType   = "t2.medium"
 		-- instance_type = "i3.xlarge"
@@ -561,7 +562,7 @@ testDocker =
       [
       -- TODO how to look up a nixpkgs member?
       -- pkgs.packer
-      ]
+      ] : List Text
     }
 	, users =
 		{ users	=

@@ -574,6 +574,59 @@ testDocker =
   { main = awsSingleWith serverConfig }
 in
 
+{- TODO write config to t.json and run:
+
+configFile =
+''
+{
+  "variables": {
+  },
+  "builders": [
+    {
+      "type": "docker",
+      "image": "ubuntu:16.04",
+      "commit": "true",
+      "run_command": [
+        "-d",
+        "-i",
+        "-t",
+        "{{.Image}}",
+        "/bin/bash"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "apt-get update",
+        "apt-get install python -yq"
+      ]
+    }
+  ],
+  "post-processors": [
+    [
+      {
+        "type": "docker-tag",
+        "repository": "noros/demo",
+        "tag": "0.1"
+      }
+    ]
+  ]
+}
+''
+
+packerBuild =
+''
+packer build t.json
+''
+
+verify =
+''
+docker run noros/demo:0.1 python --version
+''
+-}
+
 
 let
 testAwsIAM =

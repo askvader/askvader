@@ -540,7 +540,9 @@ testGitlab =
   }
   ''
   in
-  { main = awsSingleWith serverConfig }
+  { main = awsSingleWith serverConfig
+  , test = "TODO check like this: https://docs.gitlab.com/ee/user/admin_area/monitoring/health_check.html"
+  }
 in
 
 
@@ -633,6 +635,7 @@ testConsul =
         , staticFiles = [{path = "index.html", content = "none"}]
         })
     )
+  , test = "TODO check {c1.publicIP}/v1/status/leader returns a valid node"
   }
 in
 
@@ -669,6 +672,7 @@ testDocker
 -- TODO test SNS
 
 -- TODO NOW extend Docker/NixOS/EC2 to build a static set of containers
+-- Push results to ECS (for now(
 
 -- TODO Gitlab + Pipeline that builds docker images (isolated from Internet to assure pure functin of commit)
 --  + orchestration in k8s/EKS or Nomad/NixOS/EC2

@@ -34,7 +34,22 @@ in staticServer
 - Instances
 - Volumes
 - Spot/reserved
-- IAM
+- IAM users/groups
+```elm
+let aws = ./providers/aws
+let alice = aws.user { name = "alice" }
+in let bob = aws.user { name = "bob" }
+in
+  { main = aws.resources
+    [ alice
+    , bob
+    , aws.group
+      { name = "people"
+      , members = [alice, bob]
+      }
+     ]
+  } 
+```
 - VPC
 - Custom AMIs
 ### Kubernetes

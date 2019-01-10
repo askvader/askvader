@@ -6,7 +6,7 @@
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="90" align="left">
 
-Askvader is an experimental wrapper around Terraform.
+Askvader is a purely functional language that compiles to infrastructure.
 
 It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
 

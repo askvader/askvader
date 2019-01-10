@@ -1,4 +1,4 @@
--- vi:syntax=haskell
+-- vi:syntax=elm
 -- TODO pin prelude using
 --    dhall resolve
 let

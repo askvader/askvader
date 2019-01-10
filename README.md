@@ -6,7 +6,7 @@
 
 ## Askvader
 
-Askvader is a typed, purely functional language that compiles to infrastructure via backends such as [Packer](), [Terraform]() and [Nix]()
+Askvader is a typed, purely functional language that compiles to infrastructure via backends such as [Packer](), [Terraform]() and [Nix](). The core language is based on [Dhall]().
 
 - *Immutablity*: All your infrastructure should be as a single expression
 - *Reproduciblity*: The meaning of an expression does not depend on any external state

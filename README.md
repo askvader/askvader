@@ -4,7 +4,7 @@
 
 ## Askvader
 
-<img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="340" style="float: left;">
+<img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="180" style="float: left;">
 
 Askvader is an experimental wrapper around Terraform.
 

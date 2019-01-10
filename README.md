@@ -15,8 +15,8 @@ Askvader is a typed, purely functional language that compiles to infrastructure.
 
 
 ### For devs - core design
-- `askvader realize` should either fail or return a valid config - ideally catching failues before making any changes
-- `askvader destroy` should undo entirety of last apply (similar to applying an empty config)
+- `askvader deploy` should either fail or return a valid config - ideally catching failues before making any changes
+- `askvader undeploy` should undo entirety of last apply (similar to applying an empty config)
 - The (hash of the) single (resolved) expression should determine observable behaviour (e.g. no mutable dependencies, including local file system)
 
 --

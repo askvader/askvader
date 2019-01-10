@@ -8,12 +8,14 @@
 
 Askvader is a typed, purely functional language that compiles to cloud infrastructure.
 
----
+- *Immutable*: All your infrastructure should be as a single expression
+- *Reproducible*: The meaning of an expression does not depend on any external state
+- *Safe*: The type checker should catch as many errors as possible before deployment
 
-### Design goals
-- Immutable: All your infrastructure should be as a single expression
-- Reproducible: The meaning of an expression does not depend on any external state
-- Safe: The type checker should catch as many errors as possible before deployment
+
+
+
+
 
 ### For devs - core design
 - `noros apply` should either fail or return a valid config - ideally catching failues before making any changes

@@ -89,6 +89,23 @@ in
 - *Where does the name come from?* Åskväder is Swedish for *thunderstorm*.
 
 ---
+### CLI
+```
+av deploy           Deploy current expression
+av undeploy         Undo all current deployment (equivalent to deploying an empty configuration) 
+av version          Print version
+
+av resolve
+av type             Infer/typecheck 
+av normalize
+av repl
+av hash
+av format
+
+av eval             (Internal command)
+```
+
+---
 ### For devs - core design
 - `askvader deploy` should either fail or return a valid config - ideally catching failues before making any changes
 - `askvader undeploy` should undo entirety of last apply (similar to applying an empty config)

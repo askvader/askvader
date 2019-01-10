@@ -6,9 +6,7 @@
 
 ## Askvader
 
-*WARNING: Askvader is pre-alpha*.
-
-Askvader is a typed, purely functional language that compiles to distributed cloud applications. It can be thought of as a provisioner for cloud environments like Kubernetes or AWS, or as a programming language that uses these systems as its runtime environment. The core design goals are:
+Askvader is a purely functional cloud provisioning system. The core design goals are:
 
 - *Immutablity*: All your infrastructure should be as a single expression
 - *Reproduciblity*: The meaning of an expression does not depend on any external state

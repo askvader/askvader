@@ -6,9 +6,7 @@
 
 ## Askvader
 
-Askvader is an experimental wrapper around Terraform.
-
-It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
+Askvader is a typed, purely functional language that compiles to cloud infrastructure.
 
 ---
 

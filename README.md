@@ -1,7 +1,14 @@
+[![GitHub release](https://img.shields.io/github/release/haskell/ghcup.svg)](https://github.com/haskell/ghcup/releases)
+[![Build Status](https://travis-ci.org/haskell/ghcup.svg?branch=master)](https://travis-ci.org/haskell/ghcup)
+[![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING)
+
+## Askvader
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/0ax0xxrokj9uw7g/askvader.png" width="340" style="float: left;">
 
-Noros is an experimental wrapper around Terraform. It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
+Askvader is an experimental wrapper around Terraform.
+
+It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
 
 ### Design goals
 - Immutable: All your infrastructure should be as a single expression

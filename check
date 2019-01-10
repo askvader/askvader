@@ -1,2 +1,2 @@
 # TODO brief output of the 'dhall type' command + correct line in error messages?
-cat cloud.dhall | dhall
+cat cloud.d | dhall

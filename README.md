@@ -14,6 +14,10 @@ Askvader is a typed, purely functional language that compiles to distributed sys
 - *Reproduciblity*: The meaning of an expression does not depend on any external state
 - *Safety*: The type checker should catch as many errors as possible before deployment
 
+##### Table of Contents  
+[Headers](#headers)  
+[Emphasis](#emphasis)  
+
 ## Examples
 
 ### Generic

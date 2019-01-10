@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/haskell/ghcup.svg)](https://github.com/haskell/ghcup/releases)
 [![Build Status](https://travis-ci.org/haskell/ghcup.svg?branch=master)](https://travis-ci.org/haskell/ghcup)
-[![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING)
+[![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING.md)
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="190" align="left">
 

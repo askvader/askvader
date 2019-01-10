@@ -66,7 +66,7 @@ in
 - *How does Askvader relate to Ansible/Puppet/Salt etc?* Askvader does not include first-class support for these tools, and is best thought of as an alternative to them.
 - *What is the Askvader language based on?* It is based on [Dhall]().
 - *What is the difference between Askvader and Dhall?* None. Askvader is a standard-compliant Dhall implementation.
-
+- *Where does the name come from?* Åskväder is Swedish for *thunderstorm*.
 
 ---
 ### For devs - core design

@@ -136,6 +136,17 @@ av eval             (Internal command)
 - `av deploy` should either fail or return a valid config - *ideally* catching failues before making any changes
 - `av undeploy` should undo everything that has ever been deployed by AV to this backend instance (AWS account, Kubernetes cluster)
 
+- TODO simple model on basic concerns (minimizing impl works!)
+  - Atomic updates (blue/green)
+  - Handling of failed updates (returning non-0, if using blue/green: no change to observable state, error messages)
+  - Caching (e.g. reuse work, make manual rollbacks cheap)
+  - No boot/update distinction (assumption of state backend exists) -> also put AV version here.
+  - Logging
+  - Secrets
+
+- NO depencency on RT information, all eval happens up-front (but eval may return functions, which are turned into applications later)
+  - In other words *type* errors should not be possible after deployment succeeds
+
 --
 
 ### Getting started (AWS)

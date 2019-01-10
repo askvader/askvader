@@ -775,3 +775,4 @@ testDocker
 --    [{norosExpr:Text,expectedEndpoint:Text,timeout:Natural}]
 -- deploys a bunch of expressions in sequence and verifies the
 -- given URL comes up within the given time.
+-- Note some 'test' fields sketched above.

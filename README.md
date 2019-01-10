@@ -128,8 +128,9 @@ av eval             (Internal command)
         As per https://github.com/ContainerSolutions/k8s-deployment-strategies/blob/master/blue-green/multiple-services/ingress-v2.yaml
         Include version/hash in all pods/services
         Switch incoming API server atomically
+          TODO atomically update state key at the same time?
       EC2
-        Use El IP?
+        Use El IP? TODO how to atomically switch this along with state key?
 
 - Deploying E twice in a sequence
 - `av deploy` should either fail or return a valid config - *ideally* catching failues before making any changes

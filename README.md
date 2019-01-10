@@ -4,11 +4,13 @@
 
 ## Askvader
 
-<img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="180" align="right">
+<img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="90" align="left">
 
 Askvader is an experimental wrapper around Terraform.
 
 It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
+
+---
 
 ### Design goals
 - Immutable: All your infrastructure should be as a single expression

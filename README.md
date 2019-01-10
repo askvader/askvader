@@ -141,7 +141,7 @@ av eval             (Internal command)
   - Handling of failed updates (returning non-0, if using blue/green: no change to observable state, error messages)
   - Caching (e.g. reuse work, make manual rollbacks cheap)
   - No boot/update distinction (assumption of state backend exists) -> also put AV version here.
-  - Logging
+  - Logging/monitoring by default?
   - Secrets
 
 - NO depencency on RT information, all eval happens up-front (but eval may return functions, which are turned into applications later)

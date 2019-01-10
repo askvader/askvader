@@ -76,6 +76,7 @@ in
 
 ## FAQ
 - *What is the status of Askvader?* Experimental. Do not use in production yet.
+- *Where does the name come from?* Åskväder is Swedish for *thunderstorm*.
 - *What environments does Askvader support?*. The only first-class backends are AWS and Kubernetes (including EKS and minikube).
 <!--
 - *How does Askvader relate to Nix/NixOS?* Askvader can provision NixOS machines with configurations written in the Nix language or the Askvader language.
@@ -86,7 +87,8 @@ in
 - *How does Askvader relate to Ansible/Puppet/Salt etc?* Askvader does not include first-class support for these tools, and is best thought of as an alternative to them.
 -->
 - *What is the Askvader language based on?* It is based on [Dhall](). Specifically Askvader is a standard-compliant Dhall implementation with extra libraries and tooling.
-- *Where does the name come from?* Åskväder is Swedish for *thunderstorm*.
+
+- *Where does Askvader store state?* Askvader manages state as part of the backend. E.g. for AWS, the state is stored in S3. The DBs/buckets are prefixed with `av.state` by default. Note: AV writes the state atomically as the last step of deploy. I this fails deployment is considered unsuccessful.
 
 ---
 ### CLI
@@ -113,7 +115,9 @@ av eval             (Internal command)
 
 --
 
-### Getting started
+### Getting started (AWS)
+
+*WARNING: This may incur charges. Keep an eye on the billing dashboard in your cloud provider.*.
 
 - Create default security group + IAM credentials in AWS console
 - Copy AWS keys to `~/.aws/credentials` (*keep outside VC!*) under `dev` key
@@ -121,10 +125,3 @@ av eval             (Internal command)
   - Set permissions of the pem file to 600
   - Allow TCP 22 incoming connections in default security group
 
-### Deploy
-
-    ./deploy
-
-### Undeploy
-
-    terraform destroy

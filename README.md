@@ -2,12 +2,9 @@
 [![Build Status](https://travis-ci.org/haskell/ghcup.svg?branch=master)](https://travis-ci.org/haskell/ghcup)
 [![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING.md)
 
-
-## Askvader
-
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="190" align="left">
 
-*WARNING: Askvader is pre-alpha*.
+## Askvader
 
 Askvader is a purely functional interface to Terraform. The core design goals are:
 

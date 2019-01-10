@@ -18,8 +18,8 @@ It supports provisioning virtual infrastructure on AWS and Kubernetes, using Nix
 - Safe: The type checker should catch as many errors as possible before deployment
 
 ### For devs - core design
-- `noros apply` should either fail or return a valid config - ideally catching failues before making any changes
-- `noros destroy` should undo entirety of last apply (similar to applying an empty config)
+- `askvader realize` should either fail or return a valid config - ideally catching failues before making any changes
+- `askvader destroy` should undo entirety of last apply (similar to applying an empty config)
 - The (hash of the) single (resolved) expression should determine observable behaviour (e.g. no mutable dependencies, including local file system)
 
 --

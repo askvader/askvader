@@ -2,20 +2,17 @@
 [![Build Status](https://travis-ci.org/haskell/ghcup.svg?branch=master)](https://travis-ci.org/haskell/ghcup)
 [![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING)
 
+<img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="190" align="left">
+
 ## Askvader
 
-<img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="90" align="left">
+Askvader is a typed, purely functional language that compiles to cloud infrastructure.
 
-Askvader is a purely functional language that compiles to infrastructure.
+- *Immutable*: All your infrastructure should be as a single expression
+- *Reproducible*: The meaning of an expression does not depend on any external state
+- *Safe*: The type checker should catch as many errors as possible before deployment
 
-It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
 
----
-
-### Design goals
-- Immutable: All your infrastructure should be as a single expression
-- Reproducible: The meaning of an expression does not depend on any external state
-- Safe: The type checker should catch as many errors as possible before deployment
 
 ### For devs - core design
 - `askvader realize` should either fail or return a valid config - ideally catching failues before making any changes

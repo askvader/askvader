@@ -18,6 +18,14 @@ Askvader is a typed, purely functional language that compiles to distributed sys
 
 ### Generic
 - Static web servers
+
+```elm
+let staticServer = ./providers/aws ./core/server/static
+in staticServer 
+  { indexFile = "Welcome! Please try <a href=\"b.html\">this page</a>."
+  , otherFiles = [{ name = "b.html", content = "This is another file!" }] 
+  }
+```
 - Web stack with DBs
 - Load balancers
 - Consul cluster

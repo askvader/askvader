@@ -6,7 +6,7 @@
 
 ## Askvader
 
-Askvader is a typed, purely functional language that compiles to cloud infrastructure.
+Askvader is a typed, purely functional language that compiles to infrastructure.
 
 - *Immutablity*: All your infrastructure should be as a single expression
 - *Reproduciblity*: The meaning of an expression does not depend on any external state

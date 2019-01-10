@@ -123,6 +123,13 @@ av eval             (Internal command)
     E.g. no need for rollbacks (unless for other reasons)
     E.g. use blue/green in all backends by default)
     NOTE carnary can be achieved on top of this
+    How to achieve blue/green in
+      k8s
+        As per https://github.com/ContainerSolutions/k8s-deployment-strategies/blob/master/blue-green/multiple-services/ingress-v2.yaml
+        Include version/hash in all pods/services
+        Switch incoming API server atomically
+      EC2
+        Use El IP?
 
 - Deploying E twice in a sequence
 - `av deploy` should either fail or return a valid config - *ideally* catching failues before making any changes

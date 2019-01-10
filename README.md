@@ -12,7 +12,23 @@ Askvader is a typed, purely functional language that compiles to infrastructure 
 - *Reproduciblity*: The meaning of an expression does not depend on any external state
 - *Safety*: The type checker should catch as many errors as possible before deployment
 
+## Examples
 
+### Generic
+- Static web servers
+- Web stack with DBs
+- Load balancers
+- Consul cluster
+- Gitlab + Build workers
+### AWS
+- Instances
+- Volumes
+- Spot/reserved
+- IAM
+- VPC
+- Custom AMIs
+### Kubernetes
+- Custom containers
 
 ### For devs - core design
 - `askvader deploy` should either fail or return a valid config - ideally catching failues before making any changes

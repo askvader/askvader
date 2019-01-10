@@ -1,4 +1,4 @@
-
+-- vi:syntax=haskell
 -- TODO pin prelude using
 --    dhall resolve
 let

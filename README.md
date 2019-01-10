@@ -28,7 +28,24 @@ in staticServer
   , otherFiles = [{ name = "b.html", content = "This is another file!" }] 
   }
 ```
-- Web stack with DBs
+- Web stack with DBs web app
+```elm
+let server = ./core/server/nodejs
+in let db = ./core/database
+in let core = ./core
+in let dbRootPassword = core.secrets.randomAlpha 20 "dbroot"
+in server 
+  { handlerFunction = ... dbRootPassword
+  , database =
+    { type = db.Types.PostgreSQL
+    , production = False
+    , maxStorage = core.units.gb 20
+    , name = "foobar"
+    , rootUser = "root"
+    , rootPassword = dbRootPassword
+    }
+  }
+```
 - Load balancers
 - Consul cluster
 - Gitlab + Build workers

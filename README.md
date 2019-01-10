@@ -55,6 +55,20 @@ in
 ### Kubernetes
 - Custom containers
 
+## FAQ
+- *What is the status of Askvader?* Experimental. Do not use in production yet.
+- *What environments does Askvader support?*. The only first-class backends are AWS and Kubernetes (including EKS and minikube).
+- *How does Askvader relate to Nix/NixOS?* Askvader can provision NixOS machines with configurations written in the Nix language or the Askvader language.
+- *How does Askvader relate to Terraform?* Askvader includes libraries for generating HCL understood by Terraform. This is used as a backend for the AWS/Kubernetes functionality.
+- *How does Askvader relate to Docker/Packer?* Askvader can generate containers using Docker or Packer as a backend. 
+- *How does Askvader relate to Kubernetes?* Askvader can provision Kubernetes clusters.
+- *How does Askvader relate to Helm?* Askvader does not include first-class support for Helm, and is best thought of as an alternative to it.
+- *How does Askvader relate to Ansible/Puppet/Salt etc?* Askvader does not include first-class support for these tools, and is best thought of as an alternative to them.
+- *What is the Askvader language based on?* It is based on [Dhall]().
+- *What is the difference between Askvader and Dhall?* None. Askvader is a standard-compliant Dhall implementation.
+
+
+---
 ### For devs - core design
 - `askvader deploy` should either fail or return a valid config - ideally catching failues before making any changes
 - `askvader undeploy` should undo entirety of last apply (similar to applying an empty config)

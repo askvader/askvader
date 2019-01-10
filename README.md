@@ -6,7 +6,7 @@
 
 ## Askvader
 
-Askvader is a purely functional interface to Terraform. The core design goals are:
+Askvader is a purely functional cloud provisioning system. The core design goals are:
 
 - *Immutablity*: All your infrastructure should be as a single expression
 - *Reproduciblity*: The meaning of an expression does not depend on any external state

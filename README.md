@@ -23,9 +23,9 @@ Askvader is a typed, purely functional language that compiles to distributed clo
 
 ```elm
 let staticServer = ./core/server/static
-in staticServer 
+in staticServer
   { indexFile = "Welcome! Please try <a href=\"b.html\">this page</a>."
-  , otherFiles = [{ name = "b.html", content = "This is another file!" }] 
+  , otherFiles = [{ name = "b.html", content = "This is another file!" }]
   }
 ```
 - Web stack with DBs web app
@@ -34,7 +34,7 @@ let server = ./core/server/nodejs
 in let db = ./core/database
 in let core = ./core
 in let dbRootPassword = core.secrets.randomAlpha 20 "dbroot"
-in server 
+in server
   { handlerFunction = ... dbRootPassword
   , database =
     { type = db.Types.PostgreSQL
@@ -67,7 +67,7 @@ in
       , members = [alice, bob]
       }
      ]
-  } 
+  }
 ```
 - VPC
 - Custom AMIs
@@ -81,7 +81,7 @@ in
 <!--
 - *How does Askvader relate to Nix/NixOS?* Askvader can provision NixOS machines with configurations written in the Nix language or the Askvader language.
 - *How does Askvader relate to Terraform?* Askvader includes libraries for generating HCL understood by Terraform. This is used as a backend for the AWS/Kubernetes functionality.
-- *How does Askvader relate to Docker/Packer?* Askvader can generate containers using Docker or Packer as a backend. 
+- *How does Askvader relate to Docker/Packer?* Askvader can generate containers using Docker or Packer as a backend.
 - *How does Askvader relate to Kubernetes?* Askvader can provision Kubernetes clusters.
 - *How does Askvader relate to Helm?* Askvader does not include first-class support for Helm, and is best thought of as an alternative to it.
 - *How does Askvader relate to Ansible/Puppet/Salt etc?* Askvader does not include first-class support for these tools, and is best thought of as an alternative to them.
@@ -94,11 +94,11 @@ in
 ### CLI
 ```
 av deploy           Deploy current expression
-av undeploy         Undo all current deployment (equivalent to deploying an empty configuration) 
+av undeploy         Undo all current deployment (equivalent to deploying an empty configuration)
 av version          Print version
 
 av resolve
-av type             Infer/typecheck 
+av type             Infer/typecheck
 av normalize
 av repl
 av hash
@@ -108,10 +108,25 @@ av eval             (Internal command)
 ```
 
 ---
-### For devs - core design
-- `askvader deploy` should either fail or return a valid config - ideally catching failues before making any changes
-- `askvader undeploy` should undo entirety of last apply (similar to applying an empty config)
+### Core design "laws"
 - The (hash of the) single (resolved) expression should determine observable behaviour (e.g. no mutable dependencies, including local file system)
+
+- Any state backend maintains (hashes of?) previously resolved expression + state info for that deployment (including a bool: scuccess or not)
+- TODO atomicity/state
+    av deploy E1 to B <- success
+    av deploy E2 to B <- fail
+      what is the state of B?
+        in TF it is undefined
+        in a single machine Nix it is typically atomic
+  ACID by default would be *great*
+  Failed deployments logged in state backend, but *ignored* (underlying infra does not shift)
+    E.g. no need for rollbacks (unless for other reasons)
+    E.g. use blue/green in all backends by default)
+    NOTE carnary can be achieved on top of this
+
+- Deploying E twice in a sequence
+- `av deploy` should either fail or return a valid config - *ideally* catching failues before making any changes
+- `av undeploy` should undo everything that has ever been deployed by AV to this backend instance (AWS account, Kubernetes cluster)
 
 --
 

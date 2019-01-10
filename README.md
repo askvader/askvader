@@ -1,5 +1,5 @@
 
-<img alt="Noros" src="https://dl.dropboxusercontent.com/s/0ax0xxrokj9uw7g/askvader.png" width="240">
+<img alt="Noros" src="https://dl.dropboxusercontent.com/s/0ax0xxrokj9uw7g/askvader.png" width="340" style="float: left;">
 
 Noros is an experimental wrapper around Terraform. It supports provisioning virtual infrastructure on AWS and Kubernetes, using NixOS and Packer.
 

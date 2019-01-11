@@ -9,6 +9,9 @@ generate = https://prelude.dhall-lang.org/List/generate
 in
 
 
+let
+Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
+in
 
 -- Terraform providers used by the code we generate
 -- Hardcoded for now
@@ -160,6 +163,25 @@ in
 
 -- TODO static website example using S3 bucket w. PublicRead
 
+-- Const functor
+let
+Const = \(a : Type) -> \(b : Type) -> a
+in
+
+-- How to configure an AWS instance
+
+-- For now
+-- 1) We only support launhing NixOS instances
+-- 2) This must be a valid Dhall expression that compiles to a valid NixOS config
+let
+AwsInstanceConfig = Text
+in
+
+
+let
+Attr = Const Text
+in
+
 let
 AwsInstanceR =
   -- Affects name of instance
@@ -169,8 +191,6 @@ AwsInstanceR =
   -- Must be Dhall function of type (A -> B) where A is the type corresponding
   -- to the value of configAttrs and B is a valid Nix expression.
 
-  -- TODO for now we only support NixOS expressions for configuring nodes
-  -- The Text type here might be replaced with some more complex type
   , config : Coyoneda Attr Text -- (Attr b, b -> Text)
   -- Attributes to pass to the configuration
   , configAttrs : List AwsAttribute

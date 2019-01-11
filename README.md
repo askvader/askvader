@@ -6,11 +6,7 @@
 
 ## Askvader
 
-Askvader is a purely functional cloud provisioning system. The core design goals are:
-
-- *Immutablity*: All your infrastructure should be as a single expression
-- *Reproduciblity*: The meaning of an expression does not depend on any external state
-- *Safety*: The type checker should catch as many errors as possible before deployment
+Askvader is an experimental backend for [Dhall](), supporting provisioning and remote execution.
 
 [Examples](#examples) · [Tracker](https://github.com/askvader/askvader/issues)
 

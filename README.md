@@ -12,7 +12,7 @@ Askvader is a purely functional cloud provisioning system. The core design goals
 - *Reproduciblity*: The meaning of an expression does not depend on any external state
 - *Safety*: The type checker should catch as many errors as possible before deployment
 
-[Examples](#examples) · [FAQ](#faq) · [Tracker](https://github.com/askvader/askvader/issues)
+[Examples](#examples) · [Tracker](https://github.com/askvader/askvader/issues)
 
 ## Examples
 
@@ -72,21 +72,6 @@ in
 ### Kubernetes
 - Custom containers
 
-## FAQ
-- *What is the status of Askvader?* Experimental. Do not use in production yet.
-- *Where does the name come from?* Åskväder is Swedish for *thunderstorm*.
-- *What environments does Askvader support?*. The only first-class backends are AWS and Kubernetes (including EKS and minikube).
-<!--
-- *How does Askvader relate to Nix/NixOS?* Askvader can provision NixOS machines with configurations written in the Nix language or the Askvader language.
-- *How does Askvader relate to Terraform?* Askvader includes libraries for generating HCL understood by Terraform. This is used as a backend for the AWS/Kubernetes functionality.
-- *How does Askvader relate to Docker/Packer?* Askvader can generate containers using Docker or Packer as a backend.
-- *How does Askvader relate to Kubernetes?* Askvader can provision Kubernetes clusters.
-- *How does Askvader relate to Helm?* Askvader does not include first-class support for Helm, and is best thought of as an alternative to it.
-- *How does Askvader relate to Ansible/Puppet/Salt etc?* Askvader does not include first-class support for these tools, and is best thought of as an alternative to them.
--->
-- *What is the Askvader language based on?* It is based on [Dhall](). Specifically Askvader is a standard-compliant Dhall implementation with extra libraries and tooling.
-
-- *Where does Askvader store state?* Askvader manages state as part of the backend. E.g. for AWS, the state is stored in S3. The DBs/buckets are prefixed with `av.state` by default. Note: AV writes the state atomically as the last step of deploy. I this fails deployment is considered unsuccessful.
 
 ---
 ### CLI

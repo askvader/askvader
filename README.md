@@ -6,7 +6,7 @@
 
 ## Askvader
 
-Askvader is an experimental backend for [Dhall](), supporting provisioning and remote execution.
+Askvader is an experimental backend for the purely functional [Dhall]() language, which provisions cloud resources as part of its evaluation model.
 
 [Examples](#examples) · [Tracker](https://github.com/askvader/askvader/issues)
 

@@ -391,7 +391,7 @@ in
   { name = "x"
   , staticFiles = noFiles
   , config =
-    mapAttr Text NixConf toNix someAttr
+    	mapAttr Text NixConf toNix someAttr
   }
 
 -- TODO make use of the following Kubernetes networking notes

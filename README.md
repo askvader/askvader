@@ -6,7 +6,7 @@
 
 ## Askvader
 
-Askvader is an experimental purely functional language based on [Dhall](), which provisions cloud resources as part of its evaluation model. The implementation uses [Terraform](), [Packer]() and [NixOS]() to create and manage the underlying resources.
+Askvader is an experimental purely functional language based on which compiles to distributed systems. It can be run on top of AWS or Kubernetes. The implementation currently uses [Terraform](), [Packer]() and [NixOS]() to create and manage the underlying resources, which means Askvader is also a high-level interface to some of the most powerful cloud provisioning tools.
 
 [Examples](#examples) · [Tracker](https://github.com/askvader/askvader/issues)
 

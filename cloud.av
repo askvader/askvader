@@ -184,6 +184,27 @@ AwsInstanceConfig = Text
 in
 
 
+
+--
+-- TODO this is to free, allowing attributes to return any type
+-- We could solve this by fake-GADTS, by making the library a function of (attr : Type -> Type)
+-- and a record {fooAttr : attr Text, barAttr : attr Natural}
+--
+-- Full example
+--
+--    let
+--    	Id = \(a : Type) → a
+--    in let
+--    	Const = \(a : Type) → \(b : Type) → a
+--    in
+--
+--    (\(f:Type -> Type) ->
+--     \(attrs : { foo : f Natural, bar : f Text }) ->
+--     attrs.bar
+--    )
+--    (Const Text)
+--    {foo = "fooAttr", bar = "barAttr"}
+--
 let
 Attr = Const Text
 in
@@ -191,13 +212,13 @@ in
 let
 AwsInstanceR =
   -- Affects name of instance
-  -- You must create a ServerConfig (Nix expression) of the same name
   { name : Text
   -- Config expression
   -- Must be Dhall function of type (A -> B) where A is the type corresponding
   -- to the value of configAttrs and B is a valid Nix expression.
 
   , config : Coyoneda Attr Text -- (Attr b, b -> Text)
+
   -- Attributes to pass to the configuration
   -- , configAttrs : List AwsAttribute
   -- Generate a set of static files (subpaths of /var/static)

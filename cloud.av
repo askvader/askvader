@@ -12,6 +12,12 @@ in
 let
 Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
 in
+let
+liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
+in
+let
+mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
+in
 
 -- Terraform providers used by the code we generate
 -- Hardcoded for now
@@ -169,7 +175,7 @@ Const = \(a : Type) -> \(b : Type) -> a
 in
 
 -- How to configure an AWS instance
-
+--
 -- For now
 -- 1) We only support launhing NixOS instances
 -- 2) This must be a valid Dhall expression that compiles to a valid NixOS config
@@ -193,7 +199,7 @@ AwsInstanceR =
 
   , config : Coyoneda Attr Text -- (Attr b, b -> Text)
   -- Attributes to pass to the configuration
-  , configAttrs : List AwsAttribute
+  -- , configAttrs : List AwsAttribute
   -- Generate a set of static files (subpaths of /var/static)
   , staticFiles : List { path : Text, content : Text }
   }
@@ -274,7 +280,18 @@ concatMapSepBy =
     in pre ++ inner ++ end
   : Text
 in
-"TODO"
+
+let
+noFiles = [] : List {content:Text,path:Text}
+in
+
+[ AwsResources.AwsInstance
+  { name = "x"
+  , staticFiles = noFiles
+  , config = mapCoyoneda Attr Natural Text Natural/show
+    (liftCoyoneda Attr Natural "TODO-some-nat-returning-tf-splice")
+  }
+  ]
 
 -- TODO make use of the following Kubernetes networking notes
 --    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).

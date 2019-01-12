@@ -341,6 +341,19 @@ in
  -  * Invokes TF
  -
  -
+ -
+ -
+ - TODO LATER special resources for cached provisions (AMIs/containers)
+ -
+ -  * Resource a la AwsInstance that builds the NixConf to an AMI and returns registered AMI
+ -  * Resource a la AwsInstance that takes such an AMI instead of a NixConf
+ -
+ -  * Resource a la AwsInstance that builds a NixConf to a Docker container placed in ECR
+ -  * Resource that launches containers in EKS
+ -
+ -
+ -
+ -
  - TODO LATER
  -
  - Break recursive dependency between attrs/resources (using limited fixpoints?) to define safe

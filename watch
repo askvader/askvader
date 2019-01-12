@@ -1,0 +1,1 @@
+fswatch *.av askvader/*.av | xargs -n1 sh -c './check'

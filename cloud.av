@@ -2,10 +2,10 @@
 -- TODO pin prelude using
 --    dhall resolve
 let
-concatMap = https://prelude.dhall-lang.org/Text/concatMap
+concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
 in
 let
-generate = https://prelude.dhall-lang.org/List/generate
+generate = ./vendor/dhall-lang/Prelude/List/generate
 in
 
 

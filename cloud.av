@@ -365,10 +365,26 @@ in
 									-> \(attrF: AttrF c)
 									-> conv (attrF.attrParse res) )
  -
+ - We could write a function in Dhall (or in Haskell, expr -> expr) that replaces all resources
+ - with a pair
+ -    { attrName : Text, attrCont : DynVal|Text -> NixConf, tfDecls : Text }
+ - Render the above as a single TF file (this is impossible in Dhall!)
+ -
+ -
+ - NOTE currently NixConf is Text, so the above also works with virtualization (e.g. for AMI/Docker,
+ - create a packer script starting from a base image and provisioning with the Nix expression).
+ - If NixConf is changed to a *function*, we must provision an image that is basicNixOS+Dhall evaluator.
+ -
+ -
+ -
+ -
+ -
  - TODO LATER special resources for cached provisions (AMIs/containers)
  - AMI-based, implemented by running packer on host machine:
  -  * Resource a la AwsInstance that builds the NixConf to an AMI and returns registered AMI
  -  * Resource a la AwsInstance that takes such an AMI instead of a NixConf
+ -
+ -
  -
  - Implementation
  -   Make name depend of TF config (including Nix expr) - reuse if exists in AWS account
@@ -382,6 +398,14 @@ in
  -  * Resource a la AwsInstance that builds a NixConf to a Docker container placed in ECR
  -  * Resource that launches containers in EKS
  -
+ -
+ -
+ -
+ -
+ - TODO LATER
+ -    Provision a function (e.g. Text -> Text).
+ -
+ -    Provision a node with config (e.g. A -> NixConf)
  -
  -
  -

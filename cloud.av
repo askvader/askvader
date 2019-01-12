@@ -12,6 +12,9 @@ in
 let
 Applicative = ./vendor/dhall-bhat/Applicative/Type
 in
+let
+liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
+in
 
 let
 Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
@@ -299,15 +302,29 @@ let
 toNix = \(x:Text) -> { nixExpr = x }
 in
 let
+toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = x ++ y }
+in
+let
 toNixShow = \(x:Natural) -> toNix (Natural/show x)
 in
 let
 -- TODO With Coyoneda, the config can only depend on a single outout
 -- Switch to a free (finally encoded?) Applicative/Alternative to allow depending on multiple outputs
-Attr = Coyoneda AttrF
+Attr = FreeAp AttrF
 in
 let
-mapAttr = mapCoyoneda AttrF
+mapAttr = (FreeAp_functor AttrF).map
+in
+let
+liftA2Attr
+  :   ∀(a : Type)
+    → ∀(b : Type)
+    → ∀(c : Type)
+    → (a → b → c)
+    → Attr a
+    → Attr b
+    → Attr c
+  = liftA2 Attr (FreeAp_applicative AttrF)
 in
 let
 id = \(a:Type) -> \(x:a) -> x
@@ -318,7 +335,7 @@ in
 let
 -- See NOTE [Safe attributes]
 unsafeTextAttr = \(name:Text) ->
-  liftCoyoneda AttrF Text {attrName=name,attrParse = id Text}
+  liftFreeAp AttrF Text {attrName=name,attrParse = id Text}
 in
 let
 someAttr
@@ -506,16 +523,13 @@ in
  -
  -}
 
-{-
 [ AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles
   , config =
-    	mapAttr Text NodeConf toNix someAttr
+    	liftA2Attr Text Text NodeConf toNix2 someAttr someAttr
   }
 ]
--}
-FreeAp
 
 -- TODO make use of the following Kubernetes networking notes
 --    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).

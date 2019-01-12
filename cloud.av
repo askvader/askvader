@@ -186,7 +186,10 @@ in
 --
 -- NOTE [Safe attributes]
 --
--- This is to free, allowing attributes to return any type
+-- Functions like unsafeTextAttr assume that the given string represents a valid attribute
+-- of the given type (e.g. Text in the case of unsafeTextAttr). The user should not be allowed
+-- to specify this.
+--
 -- We could solve this by fake-GADTS, by making the library a function of (attr : Type -> Type)
 -- and a record {fooAttr : attr Text, barAttr : attr Natural}
 --
@@ -205,8 +208,11 @@ in
 --    (Const Text)
 --    {foo = "fooAttr", bar = "barAttr"}
 --
+-- TODO later
+-- Because Text is not inspectable in Dhall, we can currently only parse Text attribtutes
+-- Workaround: Accept a type of dynamic inputs: <Text|Natural...>
 let
-AttrF = Const {attrName:Text}
+AttrF = \(a:Type) -> {attrName:Text,attrParse:Text -> a}
 in
 
 let
@@ -224,14 +230,20 @@ let
 mapAttr = mapCoyoneda AttrF
 in
 let
--- See NOTE [Safe attributes]
-unsafeLiftAttr = \(t:Type) -> \(name:Text) ->
-  liftCoyoneda AttrF t {attrName=name}
+id = \(a:Type) -> \(x:a) -> x
 in
 let
-someNatAttr
-  = unsafeLiftAttr Natural "thisAttrReturnsNat"
-  : Attr Natural
+some = \(a:Type) -> \(x:a) -> Some x
+in
+let
+-- See NOTE [Safe attributes]
+unsafeTextAttr = \(name:Text) ->
+  liftCoyoneda AttrF Text {attrName=name,attrParse = id Text}
+in
+let
+someAttr
+  = unsafeTextAttr  "thisAttrReturnsText"
+  : Attr Text
 in
 
 -- TODO
@@ -340,9 +352,18 @@ in
  -  * Extracts functions of TF-generated attributes, writes them to eval fake-resources (as before)
  -  * Generates top level TF (by looking at the attrName in the free ap/coyoneda)
  -  * Invokes TF
+ - Basically this is simple:
+ - Given an AwsInstanceR r, we can extract the attribute and a parsing function using
  -
- -
- -
+		⊢ r.config Text ( \(c:Type) ->
+				\(conv:c -> {nixExpr:Text}) ->
+						\(attrF: AttrF c) -> attrF.attrName )
+		⊢ \(res:Text) ->
+				r.config {nixExpr:Text}
+							( \(c:Type)
+									-> \(conv:c -> NixConf)
+									-> \(attrF: AttrF c)
+									-> conv (attrF.attrParse res) )
  -
  - TODO LATER special resources for cached provisions (AMIs/containers)
  - AMI-based, implemented by running packer on host machine:
@@ -365,12 +386,13 @@ in
  - passing in a safe subset at the top level.
  -
  -}
-[ AwsResources.AwsInstance
+
+-- AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles
-  , config = mapAttr Natural NixConf toNixShow someNatAttr
+  , config =
+    mapAttr Text NixConf toNix someAttr
   }
-  ]
 
 -- TODO make use of the following Kubernetes networking notes
 --    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).
@@ -386,7 +408,7 @@ in
 -- always repushed when it has changed - alternative way of doing that?).
 -- NOTE this is only a problem if the provisioner *breaks* the instance, e.g. by filling the harddrive
 
--- TODO IAM group/role/policy (e.g. create S3 bucket and give access to single instance)
+et - TODO IAM group/role/policy (e.g. create S3 bucket and give access to single instance)
 
 -- TODO NOW S3 bucket creation/addition
 

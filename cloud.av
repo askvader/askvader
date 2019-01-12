@@ -369,6 +369,14 @@ in
  - AMI-based, implemented by running packer on host machine:
  -  * Resource a la AwsInstance that builds the NixConf to an AMI and returns registered AMI
  -  * Resource a la AwsInstance that takes such an AMI instead of a NixConf
+ -
+ - Implementation
+ -   Use external data source to call packer (with HS wrapper?)
+ -     Generates suitable JSON for packer and calls this
+ -       https://www.packer.io/docs/builders/amazon-ebs.html
+ -   Provide output attribute with the new AMI name
+ -   Provide this as an alternative input to AwsInstance
+
  - Docker-based, implemented by running docker+packer on a special instance:
  -  * Resource a la AwsInstance that builds a NixConf to a Docker container placed in ECR
  -  * Resource that launches containers in EKS

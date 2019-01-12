@@ -334,6 +334,23 @@ someNatAttr
   : Attribute Natural
 in
 
+{- TODO
+ - Write a new evaluator (in Haskell?) that extracts config code and
+ -  * Extracts functions of TF-generated attributes, writes them to eval fake-resources (as before)
+ -  * Generates top level TF (by looking at the attrName in the free ap/coyoneda)
+ -  * Invokes TF
+ -
+ -
+ - TODO LATER
+ -
+ - Break recursive dependency between attrs/resources (using limited fixpoints?) to define safe
+ - mappings between resources/attrs (e.g. prevent looking up an attr of resource of type A from
+ - resource of type B).
+ -
+ - Or use something like the NOTE [Safe attributes] approach, hiding the Attr constructors and
+ - passing in a safe subset at the top level.
+ -
+ -}
 [ AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles

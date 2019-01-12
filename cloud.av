@@ -6,6 +6,9 @@ let
 generate = ./vendor/dhall-lang/Prelude/List/generate
 in
 
+let
+Applicative = ./vendor/dhall-bhat/Applicative/Type
+in
 
 let
 Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
@@ -16,6 +19,35 @@ in
 let
 mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
 in
+
+
+-- Free Alternative (using final encoding)
+let T = Type in
+let TT = Type -> Type in
+let
+FreeAp = \(f:TT) -> \(a:T) ->
+  forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
+
+in
+let
+mapFreeAp = "TODO"
+in
+let
+pureFreeAp = "TODO"
+in
+let
+liftFreeAp = "TODO"
+in
+let
+apFreeAp = "TODO"
+in
+let
+retractFreeAp = \(f:TT) -> \(a:T) ->
+  let id = \(b:T) -> \(x : f b) -> x in
+  \(ap:Applicative f) -> \(fAp:FreeAp f a) ->
+    fAp f ap id : f a
+in
+
 
 -- Terraform providers used by the code we generate
 -- Hardcoded for now

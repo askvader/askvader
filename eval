@@ -2,6 +2,9 @@
 -- vi:syntax=haskell
 {-# LANGUAGE OverloadedStrings #-}
 
+-- TODO FIXME this should no longer generate NIX
+-- It's main responsibility should be to convert [Text] to DynExpr (as Dhall can not parse Text)
+
 import System.Environment
 import System.Process
 import Data.List (intercalate)

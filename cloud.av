@@ -371,6 +371,7 @@ in
  -  * Resource a la AwsInstance that takes such an AMI instead of a NixConf
  -
  - Implementation
+ -   Make name depend of TF config (including Nix expr) - reuse if exists in AWS account
  -   Use external data source to call packer (with HS wrapper?)
  -     Generates suitable JSON for packer and calls this
  -       https://www.packer.io/docs/builders/amazon-ebs.html

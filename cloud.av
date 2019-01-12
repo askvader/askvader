@@ -184,7 +184,9 @@ in
 
 
 --
--- TODO this is to free, allowing attributes to return any type
+-- NOTE [Safe attributes]
+--
+-- This is to free, allowing attributes to return any type
 -- We could solve this by fake-GADTS, by making the library a function of (attr : Type -> Type)
 -- and a record {fooAttr : attr Text, barAttr : attr Natural}
 --
@@ -204,18 +206,23 @@ in
 --    {foo = "fooAttr", bar = "barAttr"}
 --
 let
-Attr = Const Text
+Attr = Const {attrName:Text}
+in
+
+-- TODO
+-- For now, represent Nix config language expressions as Text
+let
+NixConf = {nixExpr:Text}
 in
 
 let
 AwsInstanceR =
   -- Affects name of instance
   { name : Text
-  -- Config expression
-  -- Must be Dhall function of type (A -> B) where A is the type corresponding
-  -- to the value of configAttrs and B is a valid Nix expression.
 
-  , config : Coyoneda Attr Text -- (Attr b, b -> Text)
+  -- TODO With Coyoneda, the config can only depend on a single outout
+  -- Use a free Applicative/Alternative to allow depending on multiple outputs
+  , config : Coyoneda Attr NixConf
 
   -- Attributes to pass to the configuration
   -- , configAttrs : List AwsAttribute
@@ -304,11 +311,33 @@ let
 noFiles = [] : List {content:Text,path:Text}
 in
 
+let
+toNix = \(x:Text) -> { nixExpr = x }
+in
+let
+toNixShow = \(x:Natural) -> toNix (Natural/show x)
+in
+let
+Attribute = Coyoneda Attr
+in
+let
+mapAttribute = mapCoyoneda Attr
+in
+let
+-- See NOTE [Safe attributes]
+unsafeLiftAttr = \(t:Type) -> \(name:Text) ->
+  liftCoyoneda Attr t {attrName=name}
+in
+let
+someNatAttr
+  = unsafeLiftAttr Natural "thisAttrReturnsNat"
+  : Attribute Natural
+in
+
 [ AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles
-  , config = mapCoyoneda Attr Natural Text Natural/show
-    (liftCoyoneda Attr Natural "TODO-some-nat-returning-tf-splice")
+  , config = mapAttribute Natural NixConf toNixShow someNatAttr
   }
   ]
 

@@ -344,10 +344,10 @@ in
  -
  -
  - TODO LATER special resources for cached provisions (AMIs/containers)
- -
+ - AMI-based, implemented by running packer on host machine:
  -  * Resource a la AwsInstance that builds the NixConf to an AMI and returns registered AMI
  -  * Resource a la AwsInstance that takes such an AMI instead of a NixConf
- -
+ - Docker-based, implemented by running docker+packer on a special instance:
  -  * Resource a la AwsInstance that builds a NixConf to a Docker container placed in ECR
  -  * Resource that launches containers in EKS
  -

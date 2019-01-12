@@ -247,9 +247,12 @@ someAttr
 in
 
 -- TODO
--- For now, represent Nix config language expressions as Text
+-- This types represents (exactly) the properties of a runnable node (container, EC2 instance, etc)
+--
+-- For now, all nodes are NixOS based, and Conf is an expression in the Nix config language, suitable
+-- for dropping in /etc/nixos/configuration.nix
 let
-NixConf = {nixExpr:Text}
+NodeConf = {nixExpr:Text}
 in
 
 let
@@ -257,7 +260,7 @@ AwsInstanceR =
   -- Affects name of instance
   { name : Text
 
-  , config : Attr NixConf
+  , config : Attr NodeConf
 
   -- Attributes to pass to the configuration
   -- , configAttrs : List AwsAttribute
@@ -361,28 +364,31 @@ in
 		⊢ \(res:Text) ->
 				r.config {nixExpr:Text}
 							( \(c:Type)
-									-> \(conv:c -> NixConf)
+									-> \(conv:c -> NodeConf)
 									-> \(attrF: AttrF c)
 									-> conv (attrF.attrParse res) )
  -
  - We could write a function in Dhall (or in Haskell, expr -> expr) that replaces all resources
  - with a pair
- -    { attrName : Text, attrCont : DynVal|Text -> NixConf, tfDecls : Text }
+ -    { attrName : Text, attrCont : DynVal|Text -> NodeConf, tfDecls : Text }
  - Render the above as a single TF file (this is impossible in Dhall!)
  -
  -
- - NOTE currently NixConf is Text, so the above also works with virtualization (e.g. for AMI/Docker,
+ - NOTE currently NodeConf is Text, so the above also works with virtualization (e.g. for AMI/Docker,
  - create a packer script starting from a base image and provisioning with the Nix expression).
- - If NixConf is changed to a *function*, we must provision an image that is basicNixOS+Dhall evaluator.
- -
- -
- -
+ - If NodeConf is changed to a *function*, the evaluator will use some Dhall backend to convert
+ - this to a runnable image. This could work in several ways:
+ -    Blob -> Blob                 Become a (pure) web server
+ -    Blob -> State Blob Blob      Become a web server with (transient) state, backed by its own harddrive
+ -    Blob -> NodeConf             Wait for a web request, then *become* the given config
+ -    Blob -> Map Text NodeConf    Wait for a web request, then *launch new nodes* with the given config
+ -    A -> B                       Become a processor in a typed channel
  -
  -
  - TODO LATER special resources for cached provisions (AMIs/containers)
  - AMI-based, implemented by running packer on host machine:
- -  * Resource a la AwsInstance that builds the NixConf to an AMI and returns registered AMI
- -  * Resource a la AwsInstance that takes such an AMI instead of a NixConf
+ -  * Resource a la AwsInstance that builds the NodeConf to an AMI and returns registered AMI
+ -  * Resource a la AwsInstance that takes such an AMI instead of a NodeConf
  -
  -
  -
@@ -395,7 +401,7 @@ in
  -   Provide this as an alternative input to AwsInstance
 
  - Docker-based, implemented by running docker+packer on a special instance:
- -  * Resource a la AwsInstance that builds a NixConf to a Docker container placed in ECR
+ -  * Resource a la AwsInstance that builds a NodeConf to a Docker container placed in ECR
  -  * Resource that launches containers in EKS
  -
  -
@@ -405,7 +411,7 @@ in
  - TODO LATER
  -    Provision a function (e.g. Text -> Text).
  -
- -    Provision a node with config (e.g. A -> NixConf)
+ -    Provision a node with config (e.g. A -> NodeConf)
  -
  -
  -
@@ -424,7 +430,7 @@ in
   { name = "x"
   , staticFiles = noFiles
   , config =
-    	mapAttr Text NixConf toNix someAttr
+    	mapAttr Text NodeConf toNix someAttr
   }
 
 -- TODO make use of the following Kubernetes networking notes
@@ -441,7 +447,7 @@ in
 -- always repushed when it has changed - alternative way of doing that?).
 -- NOTE this is only a problem if the provisioner *breaks* the instance, e.g. by filling the harddrive
 
-et - TODO IAM group/role/policy (e.g. create S3 bucket and give access to single instance)
+-- TODO IAM group/role/policy (e.g. create S3 bucket and give access to single instance)
 
 -- TODO NOW S3 bucket creation/addition
 

@@ -33,11 +33,8 @@ FreeAp = \(f:TT) -> \(a:T) ->
 
 in
 let
-FreeAp_applicative = "TODO"
-in
-let
 FreeAp_functor
-  : forall (ff : TT) -> Functor (FreeAp ff)
+  : forall (f : TT) -> Functor (FreeAp f)
   = \(ff : TT) ->
     { map =
          \(a : T)
@@ -54,7 +51,37 @@ FreeAp_functor
     }
 in
 let
-liftFreeAp = "TODO"
+FreeAp_applicative
+  : forall (f : TT) -> Applicative (FreeAp f)
+  = \(ff : TT) ->
+    { pure =  λ(a : Type) → λ(x : a) →
+      (( \(gg : TT)
+      -> \(ggAp : Applicative gg)
+      -> \(k_ : forall (x:T) -> ff x -> gg x)
+      -> ggAp.pure a x
+      ) : FreeAp ff a)
+    , ap =
+        \(a:T)
+      ->\(b:T)
+      ->\(f:FreeAp ff (a -> b))
+      ->\(x:FreeAp ff a)
+      -> ( \(gg:TT)
+         ->\(ggAp : Applicative gg)
+         ->\(k : forall (x:T) -> ff x -> gg x)
+         -> ggAp.ap a b (f gg ggAp k) (x gg ggAp k)
+         )
+    } /\ FreeAp_functor ff
+in
+let
+liftFreeAp
+  : forall (f : TT) -> forall (a : T) -> f a -> FreeAp f a
+  =   \(f:TT)
+    ->\(a:T)
+    ->\(x:f a)
+    ->( \(g:TT)
+      ->\(gAp:Applicative g)
+      ->\(k : forall (x:T) -> f x -> g x)
+      -> k a x)
 in
 let
 retractFreeAp

@@ -7,6 +7,9 @@ generate = ./vendor/dhall-lang/Prelude/List/generate
 in
 
 let
+Functor = ./vendor/dhall-bhat/Functor/Type
+in
+let
 Applicative = ./vendor/dhall-bhat/Applicative/Type
 in
 
@@ -30,19 +33,37 @@ FreeAp = \(f:TT) -> \(a:T) ->
 
 in
 let
-mapFreeAp = "TODO"
+FreeAp_applicative = "TODO"
 in
 let
-pureFreeAp = "TODO"
+FreeAp_functor
+  : forall (ff : TT) -> Functor (FreeAp ff)
+  = \(ff : TT) ->
+    { map =
+         \(a : T)
+      -> \(b : T)
+      -> \(f : a -> b)
+      -> \(g : FreeAp ff a)
+      ->
+        ((  \(gg : TT)
+        -> \(ggAp : Applicative gg)
+        -> \(k : forall (x:T) -> ff x -> gg x)
+        -> ggAp.map a b f (g gg ggAp k)
+        ): FreeAp ff b
+        )
+    }
 in
 let
 liftFreeAp = "TODO"
 in
 let
-apFreeAp = "TODO"
-in
-let
-retractFreeAp = \(f:TT) -> \(a:T) ->
+retractFreeAp
+  : forall (f : TT)
+  -> forall (a : T)
+  -> forall (ap : Applicative f)
+  -> forall (fAp : FreeAp f a)
+  -> f a
+  = \(f:TT) -> \(a:T) ->
   let id = \(b:T) -> \(x : f b) -> x in
   \(ap:Applicative f) -> \(fAp:FreeAp f a) ->
     fAp f ap id : f a
@@ -458,6 +479,7 @@ in
  -
  -}
 
+{-
 [ AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles
@@ -465,6 +487,8 @@ in
     	mapAttr Text NodeConf toNix someAttr
   }
 ]
+-}
+FreeAp
 
 -- TODO make use of the following Kubernetes networking notes
 --    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).

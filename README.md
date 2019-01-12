@@ -1,12 +1,12 @@
-[![GitHub release](https://img.shields.io/github/release/haskell/ghcup.svg)](https://github.com/haskell/ghcup/releases)
-[![Build Status](https://travis-ci.org/haskell/ghcup.svg?branch=master)](https://travis-ci.org/haskell/ghcup)
-[![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING.md)
+[![GitHub release](https://img.shields.io/github/release/askvader/askvader.svg)](https://github.com/askvader/askvader/releases)
+[![Build Status](https://travis-ci.org/askvader/askvader.svg?branch=master)](https://travis-ci.org/askvader/askvader)
+[![license](https://img.shields.io/github/license/askvader/askvader.svg)](COPYING.md)
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="190" align="left">
 
 ## Askvader
 
-Askvader is an experimental purely functional language based on [Dhall](), which provisions cloud resources as part of its evaluation model. The implementation uses [Terraform](), [Packer]() and [NixOS]() to create and manage the underlying resources.
+Askvader is an experimental compiler for [Dhall]() which generates a set of processes running in a cloud environment (Kubernetes or AWS). The implementation currently uses [Terraform](), [Packer]() and [NixOS]() to create and manage the underlying resources, which means Askvader is also a high-level interface to some of the most powerful cloud provisioning tools.
 
 [Examples](#examples) · [Tracker](https://github.com/askvader/askvader/issues)
 

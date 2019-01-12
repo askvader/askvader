@@ -1,6 +1,4 @@
 
--- TODO pin prelude using
---    dhall resolve
 let
 concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
 in

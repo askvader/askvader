@@ -6,7 +6,7 @@
 
 ## Askvader
 
-Askvader is an experimental compiler from [Dhall]() to distributed systems running in the cloud. The implementation currently uses [Terraform](), [Packer]() and [NixOS]() to create and manage the underlying resources, which means Askvader is also a high-level interface to some of the most powerful cloud provisioning tools.
+Askvader is an experimental compiler for [Dhall]() which generates distributed systems and cloud infrastructure. The implementation currently uses [Terraform](), [Packer]() and [NixOS]() to create and manage the underlying resources, which means Askvader is also a high-level interface to some of the most powerful cloud provisioning tools.
 
 [Examples](#examples) · [Tracker](https://github.com/askvader/askvader/issues)
 

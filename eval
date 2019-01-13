@@ -1,6 +1,6 @@
 #!/usr/bin/env runghc
 -- vi:syntax=haskell
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
 -- TODO FIXME this should no longer generate NIX
 -- It's main responsibility should be to convert [Text] to DynExpr (as Dhall can not parse Text)
@@ -10,23 +10,27 @@ import System.Process
 import Data.List (intercalate)
 import qualified Data.Text as Text
 
+import Dhall
+
 main = do
 
   -- TODO support calling with N arguments...
   args1 <- getArgs
-  -- TODO figure out how to parse real input
+  -- TODO FIXME figure out how to parse real input and plug in...
   let fullCode = "(" ++ head args1 ++ ")([<N=554433 | T:Text>])"
 
   -- TODO improve error message if we fail here
-  dhallExpr <- readProcess "dhall" ["normalize"] fullCode
+  dhallExpr <- Text.pack <$> readProcess "dhall" ["normalize"] fullCode
 
   -- NOTE
   -- Currently this is always a (Some {nixExpr : Text})
   -- See NOTE [Evaluator Protocol]
-  let nixExpr = dhallExpr
-
-  -- Escape the nixExpr for JSON as per TF external resource protocol
-  putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"
+  mNixExpr :: Maybe Text <- input (Dhall.maybe $ record $ field "nixExpr" strictText) dhallExpr
+  case mNixExpr of
+    Nothing -> error $ "eval: Attr parser failed"
+    Just nixExpr ->
+      -- Escape the nixExpr for JSON as per TF external resource protocol
+      putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"
 
 -- |
 -- Some very unsafe escapes to insert arbitrary Dhall into the resulting Nix code.

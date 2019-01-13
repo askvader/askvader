@@ -301,7 +301,7 @@ let
 PrimAttr = <N:Natural | T:Text>
 in
 let
-AttrF = \(a:Type) -> {attrName:Text,attrParse:List PrimAttr -> Optional a}
+AttrF = \(a:Type) -> {attrName:Text, attrParse:PrimAttr -> Optional a}
 in
 
 let
@@ -350,7 +350,7 @@ let
 unsafeTextAttr = \(name:Text) ->
   liftFreeAp AttrF Text
     { attrName = name
-    , attrParse = \(x:List PrimAttr) -> None Text -- FIXME
+    , attrParse = \(x:PrimAttr) -> None Text -- FIXME
     }
 in
 let
@@ -548,9 +548,11 @@ in
  -      ((False,3),["4"])
  -
  -  Use this to obtain the following at top-level
- -    [{ name:Text
- -      , tfAttrs : TFResourceDecl
- -      , attrNames: [Text], attrCont: [Text] -> NodeConf}]
+ -    [{ tfCodeBefore : Text
+ -     , tfCodeAfter : Text
+ -     , attrNames: [Text]
+ -     , tfContinue: [PrimAttr] -> NodeConf
+ -     }]
  -
  - Write simple Haskell program that recieves this,
  - generates TF files and runs it. Note the attrCont should be
@@ -560,6 +562,36 @@ in
  - Adapt 'eval' to compose recieved expressions, *normalize*,
  - then feed back to TF.
  -}
+
+
+
+
+
+-- NOTE anything involving the evaluator protocol should be hidden from the user
+-- The main interface should be: user writes an expression of type (List AwsResource),
+-- (List KubernetesResource), and so on for each backend.
+
+
+-- The following types definne a protocol between the Dhall code and the Terraform evaluator.
+--
+--  * EvaluatorInput generates a static graph passed to Terraform, except for the
+--    tfContinue field, which is *normalized but not reduced to a serializable type*
+--  * For each node in the graph, we generates a special external_resource to recieve inputs.
+--    These are converted to PrimAttr, applied to the tfContinue expression and *normalized as before*
+--  * The resultant NodeConf expression is handled by the evaluator. For a NixOS config, the node
+--    is created and provisioned with the given expression.
+let
+EvaluatorInput =
+  List
+   -- Terraform code before the tfContinue block
+   { tfCodeBefore : Text
+   -- Terraform code after the tfCodeAfter block
+   , tfCodeAfter : Text
+   -- Spliced attributes and continuation
+   , attrNames: List Text
+   , tfContinue: List PrimAttr -> NodeConf
+   }
+in
 
 [ AwsResources.AwsInstance
   { name = "x"

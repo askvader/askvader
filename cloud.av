@@ -546,6 +546,9 @@ in
  - > let readerToState  = (\(ReaderT f) -> StateT (\s -> Identity (runIdentity $ f (head s), (tail s)))) :: forall s x . Reader s x -> State [s] x
  - > runState (runAp readerToState (liftA2 (,) (liftAp (reader (read @Bool))) (liftAp (reader (read @Int))))) ["False","3","4"]
  -      ((False,3),["4"])
+ -
+ -  Use this to obtain the following at top-level
+ -    [{name:Text, attrNames: [Text], attrCont: [Text] -> NodeConf}]
  -}
 
 [ AwsResources.AwsInstance

@@ -26,6 +26,7 @@ import GHC.Generics (from)
 import Dhall.Map (Map)
 import qualified Dhall.Map as Map
 
+-- See NOTE [Evaluator Protocol]
 data EvalInput = EvalInput
   { tfCodeAfter :: Text
   , tfCodeBefore :: Text

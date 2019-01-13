@@ -1,0 +1,21 @@
+#!/usr/bin/env runghc
+-- vi:syntax=haskell
+{-# LANGUAGE OverloadedStrings #-}
+
+-- TODO
+-- Import expr as Dhall
+-- Generate TF, inserting Dhall cont (normalized)
+-- Invoke TF as per 'deploy'
+
+-- TODO
+-- Adapt 'eval' to wrap in T/N and extract nixExpr (for now)
+-- Make available to code as eval-result
+
+import System.Environment
+import System.Process
+import Data.List (intercalate)
+import qualified Data.Text as Text
+import Dhall
+
+main = do
+  putStrLn "TODO"

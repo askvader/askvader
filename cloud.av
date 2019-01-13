@@ -684,6 +684,7 @@ let awsInstanceToInput
     , tfContinue = runAttr instance.config
     }
 
+let pureAttr = (FreeAp_applicative AttrF).pure
 
 
 in
@@ -700,12 +701,12 @@ awsInstanceToInput
   , config =
     	liftA2Attr Text Text NodeConf toNix2
         --someAttr
-         ((FreeAp_applicative AttrF).pure Text "y")
+        (pureAttr Text "y")
         (mapAttr Natural Text Natural/show someNatAttr)
   }
 )
 -- .attrNames
- .tfContinue ([PrimAttr.N 2] : List PrimAttr)
+.tfContinue ([PrimAttr.N 2] : List PrimAttr)
 
 
 -- ]

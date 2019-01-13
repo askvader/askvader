@@ -781,7 +781,6 @@ in
 
 
 -- Examples
---
 
 -- TODO handle all AwsResources
 map AwsInstanceR EvaluatorInput awsInstanceToInput

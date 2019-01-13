@@ -315,7 +315,7 @@ let
 toNix = \(x:Text) -> { nixExpr = x }
 in
 let
-toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = x ++ y }
+toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = x ++ " " ++ y }
 in
 let
 toNixShow = \(x:Natural) -> toNix (Natural/show x)
@@ -352,19 +352,37 @@ someT
     }
     x
 in
-let
 -- See NOTE [Safe attributes]
-unsafeTextAttr = \(name:Text) ->
+
+let unsafeTextAttr = \(name:Text) ->
   liftFreeAp AttrF Text
     { attrName = name
-    , attrParse = \(x:PrimAttr) -> None Text -- FIXME
+    , attrParse = \(x:PrimAttr) ->
+      merge
+        { T = \(x:Text) -> Some x
+        , N = \(x:Natural) -> (None Text)
+        }
+        x
     }
-in
 let
 someAttr
   = unsafeTextAttr  "thisAttrReturnsText"
   : Attr Text
-in
+let unsafeNatAttr = \(name:Text) ->
+  liftFreeAp AttrF Natural
+    { attrName = name
+    , attrParse = \(x:PrimAttr) ->
+      merge
+        { N = \(x:Natural) -> Some x
+        , T = \(x:Text) -> (None Natural)
+        }
+        x
+    }
+let
+someNatAttr
+  = unsafeNatAttr  "thisAttrReturnsNat"
+  : Attr Natural
+
 
 -- TODO
 -- This types represents (exactly) the properties of a runnable node (container, EC2 instance, etc)
@@ -715,11 +733,15 @@ awsInstanceToInput
   , staticFiles = noFiles
   , config =
     	liftA2Attr Text Text NodeConf toNix2
-        -- someAttr
-        ((FreeAp_applicative AttrF).pure Text "x")
-        ((FreeAp_applicative AttrF).pure Text "y")
+        --someAttr
+         ((FreeAp_applicative AttrF).pure Text "y")
+        (mapAttr Natural Text Natural/show someNatAttr)
   }
-).tfContinue ([PrimAttr.T "foo", PrimAttr.T "bar"] : List PrimAttr)
+)
+-- .attrNames
+ .tfContinue ([PrimAttr.N 2] : List PrimAttr)
+
+
 -- ]
 
 -- TODO make use of the following Kubernetes networking notes

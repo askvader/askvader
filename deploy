@@ -1,2 +1,1 @@
-cat cloud.av | (echo -n "(" && cat && echo ").main") | dhall-to-text > tmp.tf \
-  && terraform apply -auto-approve
+./run $* && terraform apply -auto-approve

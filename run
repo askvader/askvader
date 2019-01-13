@@ -73,5 +73,6 @@ main = do
       -- print $ from $ res1
       inputs <- parseInputs res1
       writeFile "tmp.tf" $ Text.unpack $ writeTF inputs
-      readProcess "terraform" ["apply","-auto-approve"] ""
+      -- createProcess $ proc "terraform" ["apply","-auto-approve"]
+
 

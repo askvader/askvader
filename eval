@@ -14,33 +14,13 @@ main = do
 
   -- TODO support calling with N arguments...
   args1 <- getArgs
+  -- TODO figure out how to parse real input
+  let fullCode = "(" ++ head args1 ++ ")([<N=554433 | T:Text>])"
 
-  -- TODO all arguments (except the first) comes from Terraform splices
-  -- Not sure what the format is, except that strings come unescaped
-  -- We escape strings for now and worry about other types later
-  let args = head args1 : fmap show (tail args1)
+  nixExpr1 <- readProcess "dhall" ["normalize"] fullCode
+  let nixExpr = nixExpr1
 
-  let fullCode = concatMap (("("++) . (++")")) args
-
-  nixExpr1 <- readProcess "dhall-to-nix" [] fullCode
-
-  let pre =
-              intercalate "\n"
-              [ "{ config, pkgs, ... }:"
-              , "({"
-              , "  imports = [ <nixpkgs/nixos/modules/virtualisation/amazon-image.nix> ];"
-              , "  ec2.hvm = true;"
-              , "}"
-              , "//"
-              ]
-
-  let post =
-              intercalate "\n"
-              [ ")"
-              ]
-  let nixExpr = pre ++ dhallEscapes nixExpr1 ++ post
-
-  -- Escape the nixExpr
+  -- Escape the nixExpr for JSON as per TF external resource protocol
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"
 
 -- |

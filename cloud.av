@@ -678,8 +678,91 @@ let getAttrNames
 let awsInstanceToInput
   : AwsInstanceR -> EvaluatorInput
   = \(instance : AwsInstanceR) ->
-    { tfCodeBefore = "TODO"
-    , tfCodeAfter = "TODO"
+    -- TODO don't fake
+    let name = "foo"
+    let staticFileBlock = ""
+    let attrBlock =
+      ''
+      , "N 22"
+      ''
+    -- TODO should be at top level
+    let pre =
+      ''
+					provider "aws" {
+						region  = "eu-west-2"
+						version = "= 1.54.0"
+						profile = "dev"
+					}
+					provider "null" {
+						version = "= 1.0"
+					}
+					provider "external" {
+						version = "= 1.0.0"
+					}
+      ''
+    in
+
+    { tfCodeBefore =
+    ''
+          ${pre}
+          data "external" "${name}-eval" {
+            program =
+              [ "./eval"
+              // Pass code as first argument
+              , <<EOF
+    ''
+    , tfCodeAfter =
+    ''
+              EOF
+              ${attrBlock}
+              ]
+            query =
+              {
+              }
+          }
+          resource "aws_instance" "${name}" {
+            ami             = "${standardAwsOptions.ami}"
+            instance_type		= "${standardAwsOptions.instanceType}"
+            key_name        = "admin"
+
+            tags {
+              Name = "${name}"
+            }
+
+            root_block_device {
+              volume_size = ${Natural/show standardAwsOptions.rootBlockDeviceVolumeSize}
+            }
+          }
+          resource "null_resource" "${name}-prov" {
+            triggers {
+              build_number = "''${timestamp()}"
+            }
+            connection {
+              type = "ssh"
+              user = "root"
+              host = "''${element(aws_instance.${name}.*.public_ip, 0)}"
+              private_key = "''${file("~/.aws/${standardAwsOptions.keyName}.pem")}"
+            }
+            provisioner "file" {
+              content = "''${data.external.${name}-eval.result.nix}"
+              destination = "/etc/nixos/configuration.nix"
+            }
+            provisioner "remote-exec" {
+              inline = [
+                "mkdir -p /var/static"
+              ]
+            }
+            ${staticFileBlock}
+            provisioner "remote-exec" {
+              inline = [
+                "cat /etc/nixos/configuration.nix",
+                "nixos-rebuild switch"
+              ]
+            }
+          }
+
+    ''
+
     , attrNames = getAttrNames instance.config
     , tfContinue = runAttr instance.config
     }

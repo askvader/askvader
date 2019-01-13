@@ -871,5 +871,7 @@ map AwsInstanceR EvaluatorInput awsInstanceToInput
 -- given URL comes up within the given time.
 -- Note some 'test' fields sketched above.
 
-
--- TODO remove all 'in' and use formatter!
+-- TODO make Attr parser actually work
+-- TODO restore S3/etc
+-- TODO restore examples, flip to master
+-- TODO restore NixOS preamble-

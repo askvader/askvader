@@ -567,12 +567,10 @@ in
 
 
 
--- NOTE anything involving the evaluator protocol should be hidden from the user
--- The main interface should be: user writes an expression of type (List AwsResource),
--- (List KubernetesResource), and so on for each backend.
-
-
+-- NOTE [Evaluator layer]
+--
 -- The following types definne a protocol between the Dhall code and the Terraform evaluator.
+-- This works as follows:
 --
 --  * EvaluatorInput generates a static graph passed to Terraform, except for the
 --    tfContinue field, which is *normalized but not reduced to a serializable type*
@@ -580,6 +578,15 @@ in
 --    These are converted to PrimAttr, applied to the tfContinue expression and *normalized as before*
 --  * The resultant NodeConf expression is handled by the evaluator. For a NixOS config, the node
 --    is created and provisioned with the given expression.
+--
+-- Anything involving the evaluator protocol should be hidden from the user
+-- The main interface should be: user writes an expression of type (List AwsResource),
+-- (List KubernetesResource), and so on for each backend.
+
+-- NOTE  [Evaluator protocol]
+-- Any changes to the Evaluator protocol (types prefixed with Evaluator) must be echoed on
+-- the Haskell side.
+
 let
 EvaluatorInput =
   List
@@ -588,11 +595,21 @@ EvaluatorInput =
    -- Terraform code after the tfCodeAfter block
    , tfCodeAfter : Text
    -- Spliced attributes and continuation
+   --
+   -- TODO returning NodeConf here implies that TF attributes other than 'uploaded config'
+   -- can not depend on Attr values. We could enrich the return type here to include more
+   -- such data if needed.
    , attrNames: List Text
    , tfContinue: List PrimAttr -> NodeConf
    }
 in
 
+
+
+
+
+-- Examples
+--
 [ AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles

@@ -17,8 +17,13 @@ main = do
   -- TODO figure out how to parse real input
   let fullCode = "(" ++ head args1 ++ ")([<N=554433 | T:Text>])"
 
-  nixExpr1 <- readProcess "dhall" ["normalize"] fullCode
-  let nixExpr = nixExpr1
+  -- TODO improve error message if we fail here
+  dhallExpr <- readProcess "dhall" ["normalize"] fullCode
+
+  -- NOTE
+  -- Currently this is always a (Some {nixExpr : Text})
+  -- See NOTE [Evaluator Protocol]
+  let nixExpr = dhallExpr
 
   -- Escape the nixExpr for JSON as per TF external resource protocol
   putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"

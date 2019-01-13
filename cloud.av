@@ -556,25 +556,30 @@ noFiles = [] : List {content:Text,path:Text}
 
 
 
--- NOTE [Evaluator layer]
+-- NOTE  [Evaluator Protocol]
 --
--- The following types definne a protocol between the Dhall code and the Terraform evaluator.
--- This works as follows:
+-- The following types definne a protocol between the Dhall code and the
+-- Terraform evaluator. The basic path is:
 --
---  * EvaluatorInput generates a static graph passed to Terraform, except for the
---    tfContinue field, which is *normalized but not reduced to a serializable type*
---  * For each node in the graph, we generates a special external_resource to recieve inputs.
---    These are converted to PrimAttr, applied to the tfContinue expression and *normalized as before*
---  * The resultant NodeConf expression is handled by the evaluator. For a NixOS config, the node
---    is created and provisioned with the given expression.
+--  * EvaluatorInput generates a static graph passed to Terraform, except for
+--  the tfContinue field, which is *normalized but not reduced to a
+--  serializable type*
 --
--- Anything involving the evaluator protocol should be hidden from the user
--- The main interface should be: user writes an expression of type (List AwsResource),
--- (List KubernetesResource), and so on for each backend.
-
--- NOTE  [Evaluator protocol]
--- Any changes to the Evaluator protocol (types prefixed with Evaluator) must be echoed on
--- the Haskell side.
+--  * For each node in the graph, we generates a special external_resource to
+--  recieve inputs.  These are converted to PrimAttr, applied to the tfContinue
+--  expression and *normalized as before*.
+--
+--  * The resultant NodeConf expression is handled by the evaluator. For a
+--  NixOS config, the node is created and provisioned with the given
+--  expression.
+--
+-- Anything involving the evaluator protocol should be hidden from the user.
+-- The main interface should be: user writes an expression of type (List
+-- AwsResource), (List KubernetesResource) and so on for each backend.
+--
+-- Any changes to the Evaluator Protocol must be kept in sync between Dhall and
+-- Haskell/CLI. Search for references to this note to find the relevant code
+-- paths.
 
 let EvaluatorInput =
    -- Terraform code before the tfContinue block
@@ -635,9 +640,6 @@ let attrParserToState
         (None {val:a,state:List PrimAttr})
        )
 
-
-      : StateT (List PrimAttr) Optional a
-
 let attrParserToConst
   : forall (a : Type) -> AttrF a -> Const (List Text) a
   = \(a : T)
@@ -648,6 +650,7 @@ let attrParserToConst
 let runAttr
   : Attr NodeConf -> List PrimAttr -> Optional NodeConf
   = \(attr : Attr NodeConf) -> \(inputs : List PrimAttr) ->
+    let Res = {val:NodeConf,state:List PrimAttr}
     let parser
       : StateT (List PrimAttr) Optional NodeConf
       = attr
@@ -656,9 +659,9 @@ let runAttr
         attrParserToState
     in
       Optional_functor.map
-        {val:NodeConf,state:List PrimAttr}
+        Res
         NodeConf
-        (\(x:{val:NodeConf,state:List PrimAttr}) -> x.val)
+        (\(x:Res) -> x.val)
         (parser inputs)
 
 let Text_monoid = { unit = "", op = \(x:Text) -> \(y:Text) -> x ++ y } : Monoid Text

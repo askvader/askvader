@@ -8,7 +8,7 @@
 -- Invoke TF as per 'deploy'
 
 -- TODO
--- Adapt 'eval' to wrap in T/N and extract nixExpr (for now)
+-- Adapt 'run' to wrap in T/N and extract nixExpr (for now)
 -- Make available to code as eval-result
 
 import System.Environment
@@ -36,7 +36,7 @@ data EvalInput = EvalInput
 parseInputs :: Expr X X -> IO [EvalInput]
 parseInputs x = case x of
   ListLit _ xs -> traverse parseInput $ toList xs
-  _ -> error "eval: Not a list"
+  _ -> error "run: Not a list"
 
 parseInput :: Expr X X -> IO EvalInput
 parseInput x = case x of
@@ -51,8 +51,8 @@ parseInput x = case x of
         tfCodeBefore
         attrNames
         tfContinue
-    _ -> error "eval: Bad record"
-  _ -> error "eval: Not a record"
+    _ -> error "run: Bad record"
+  _ -> error "run: Not a record"
 
 writeTF :: [EvalInput] -> Text
 writeTF = mconcat . fmap writeEI
@@ -66,7 +66,7 @@ main = do
   inp1 <- readProcess "dhall" ["resolve"] inp
   inp2 <- readProcess "dhall" ["normalize"] inp1
   case exprFromText "input" $ Text.pack inp2 of
-    Left e -> error $ show e
+    Left e -> error $ ("run: " ++) $ show e
     Right res -> do
       res1 <- denote <$> load res
       print "OK"

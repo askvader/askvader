@@ -593,16 +593,51 @@ let Optional_functor = ./vendor/dhall-bhat/Optional/functor
 let StateT = ./vendor/dhall-bhat/StateT/Type
 let StateT_applicative = ./vendor/dhall-bhat/StateT/applicative
   (List PrimAttr) Optional Optional_monad
+let indexed = ./vendor/dhall-lang/Prelude/List/indexed
+let filter = ./vendor/dhall-lang/Prelude/List/filter
+let map = ./vendor/dhall-lang/Prelude/List/map
+let not = ./vendor/dhall-lang/Prelude/Bool/not
+let isZero = ./vendor/dhall-lang/Prelude/Natural/isZero
+let uncons
+  : ∀(a : Type) → List a → ∀(list : Type) → ∀(cons : a → List a → list) → ∀(nil : list) → list
+  = \(a:T)
+    -> let tail
+        : List a -> List a
+        -- TODO faster
+        = \(xs:List a) ->
+          map {value:a,index:Natural} a (\(x:{value:a,index:Natural}) -> x.value)
+            (filter {value:a,index:Natural} (\(x:{value:a,index:Natural}) ->
+              not (isZero x.index))
+              (indexed a xs))
+        in
+       \(xs:List a)
+    -> \(r:T)
+    -> \(cons: a → List a → r)
+    -> \(nil:r)
+    -> List/fold a xs r (\(x:a) -> \(cs:r) -> cons x (tail xs)) nil
 
 let attrParserToState
   : forall (a : Type) -> AttrF a -> StateT (List PrimAttr) Optional a
   =    \(a:T)
-    -> \(x:AttrF a)
-    -- FIXME this always fails...
-    -> ((\(s:List PrimAttr) -> None {val:a,state:List PrimAttr}):StateT (List PrimAttr) Optional a)
+    -> \(attr:AttrF a)
+    -> ( \(s:List PrimAttr)
+       ->
+        uncons PrimAttr s (Optional{val:a,state:List PrimAttr})
+        (    \(x:PrimAttr)
+          -> \(xs:List PrimAttr)
+          ->
+          Optional/fold a (attr.attrParse x) (Optional{val:a,state:List PrimAttr})
+            (\(x:a) -> Some {val=x,state=xs})
+            (None {val:a,state:List PrimAttr} )
+        )
+        (None {val:a,state:List PrimAttr})
+       )
+
+
+      : StateT (List PrimAttr) Optional a
 
 -- forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
-let foo
+let runAttr
   : Attr NodeConf -> List PrimAttr -> Optional NodeConf
   = \(attr : Attr NodeConf) -> \(inputs : List PrimAttr) ->
     let parser
@@ -624,12 +659,14 @@ let awsInstanceToInput
     { tfCodeBefore = "TODO"
     , tfCodeAfter = "TODO"
     , attrNames = ["TODO"]
-    , tfContinue = foo instance.config
+    , tfContinue = runAttr instance.config
     }
 in
 
 
+uncons
 
+{-
 -- Examples
 --
 [ AwsResources.AwsInstance
@@ -641,6 +678,7 @@ in
         ((FreeAp_applicative AttrF).pure Text "haha")
   }
 ]
+-}
 
 -- TODO make use of the following Kubernetes networking notes
 --    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).

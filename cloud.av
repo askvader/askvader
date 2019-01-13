@@ -240,10 +240,30 @@ in
 
 -- TODO static website example using S3 bucket w. PublicRead
 
+let Monoid = ./vendor/dhall-bhat/Monoid/Type
+
 -- Const functor
 let
 Const = \(a : Type) -> \(b : Type) -> a
 in
+let Const_functor = \(x:Type) ->
+  { map =
+    \(a:T)
+      -> \(b:T)
+      -> \(f:a -> b)
+      -> \(c:Const x a) -> c
+  } : Functor (Const x)
+let Const_applicative = \(m:Type) -> \(mon:Monoid m) ->
+  ({ pure = \(a:T) -> \(x:a) -> mon.unit
+  , ap =
+    \(a:T)
+    -> \(b:T)
+    -> \(cf : Const m (a -> b))
+    -> \(cx : Const m a)
+    -> mon.op cf cx
+  } /\ Const_functor m
+  )
+  : Applicative (Const m)
 
 -- How to configure an AWS instance
 --
@@ -636,6 +656,12 @@ let attrParserToState
 
       : StateT (List PrimAttr) Optional a
 
+let attrParserToConst
+  : forall (a : Type) -> AttrF a -> Const (List Text) a
+  = \(a : T)
+    -> \(attr : AttrF a)
+    -> [attr.attrName]
+
 -- forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
 let runAttr
   : Attr NodeConf -> List PrimAttr -> Optional NodeConf
@@ -653,32 +679,48 @@ let runAttr
         (\(x:{val:NodeConf,state:List PrimAttr}) -> x.val)
         (parser inputs)
 
+let Text_monoid = { unit = "", op = \(x:Text) -> \(y:Text) -> x ++ y } : Monoid Text
+let List_monoid = ./vendor/dhall-bhat/List/monoid
+
+let getAttrNames
+  : Attr NodeConf -> List Text
+  = \(attr : Attr NodeConf) ->
+    let r
+      : Const (List Text) NodeConf
+      = attr
+        (Const (List Text))
+        (Const_applicative (List Text) (List_monoid Text))
+        attrParserToConst
+    in r
+
 let awsInstanceToInput
   : AwsInstanceR -> EvaluatorInput
   = \(instance : AwsInstanceR) ->
     { tfCodeBefore = "TODO"
     , tfCodeAfter = "TODO"
-    , attrNames = ["TODO"]
+    , attrNames = getAttrNames instance.config
     , tfContinue = runAttr instance.config
     }
 in
 
 
-uncons
 
-{-
 -- Examples
 --
-[ AwsResources.AwsInstance
+
+-- [ AwsResources.AwsInstance
+(
+awsInstanceToInput
   { name = "x"
   , staticFiles = noFiles
   , config =
     	liftA2Attr Text Text NodeConf toNix2
-        someAttr
-        ((FreeAp_applicative AttrF).pure Text "haha")
+        -- someAttr
+        ((FreeAp_applicative AttrF).pure Text "x")
+        ((FreeAp_applicative AttrF).pure Text "y")
   }
-]
--}
+).tfContinue ([PrimAttr.T "foo", PrimAttr.T "bar"] : List PrimAttr)
+-- ]
 
 -- TODO make use of the following Kubernetes networking notes
 --    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).

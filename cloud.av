@@ -75,7 +75,6 @@ liftFreeAp
       ->\(gAp:Applicative g)
       ->\(k : forall (x:T) -> f x -> g x)
       -> k a x)
-in
 let
 retractFreeAp
   : forall (f : TT)
@@ -87,7 +86,6 @@ retractFreeAp
   let id = \(b:T) -> \(x : f b) -> x in
   \(ap:Applicative f) -> \(fAp:FreeAp f a) ->
     fAp f ap id : f a
-in
 
 
 -- Terraform providers used by the code we generate
@@ -107,7 +105,6 @@ standardProviders =
     version = "= 1.0.0"
   }
   ''
-in
 
 -- Standard AWS options
 -- Hardcoded for now
@@ -126,7 +123,6 @@ standardAwsOptions =
   -- In GB
   , rootBlockDeviceVolumeSize = 30 -- TODO too big?
   }
-in
 
 
 
@@ -173,7 +169,6 @@ AwsAttribute =
   | AwsIAMUserARN : Text
   | AwsIAMUserUniqueId : Text
   >
-in
 
 --
 -- Returns the Dhall type of the given AwsAttribute
@@ -188,11 +183,9 @@ typeOf = \(x : AwsAttribute) ->
   , AwsIAMUserUniqueId = \(_:Text) -> "Text"
   }
   x : Text
-in
 
 let
 AwsAttributes = constructors AwsAttribute
-in
 
 
 let
@@ -202,11 +195,9 @@ CannedACL =
 	| PublicReadWrite : {}
 	-- TODO ...
 	>
-in
 
 let
 VersioningOptions = { mfaDelete : Bool }
-in
 
 let
 S3BucketR =
@@ -215,11 +206,9 @@ S3BucketR =
   , acl : Optional CannedACL
 	, versioning : Optional VersioningOptions
   }
-in
 
 let
 Blob = List Natural -- All values >255 are normalized as 0
-in
 
 let
 S3BucketObjectSource =
@@ -228,7 +217,6 @@ S3BucketObjectSource =
                 -- We should use that!
   | Binary : Blob
   >
-in
 
 let
 S3BucketObjectR =
@@ -236,7 +224,6 @@ S3BucketObjectR =
   , key : Text
   , source : S3BucketObjectSource
   }
-in
 
 -- TODO static website example using S3 bucket w. PublicRead
 
@@ -245,7 +232,6 @@ let Monoid = ./vendor/dhall-bhat/Monoid/Type
 -- Const functor
 let
 Const = \(a : Type) -> \(b : Type) -> a
-in
 let Const_functor = \(x:Type) ->
   { map =
     \(a:T)
@@ -272,7 +258,6 @@ let Const_applicative = \(m:Type) -> \(mon:Monoid m) ->
 -- 2) This must be a valid Dhall expression that compiles to a valid NixOS config
 let
 AwsInstanceConfig = Text
-in
 
 
 
@@ -306,28 +291,21 @@ in
 -- convert Terraform text to suitable types
 let
 PrimAttr = <N:Natural | T:Text>
-in
 let
 AttrF = \(a:Type) -> {attrName:Text, attrParse:PrimAttr -> Optional a}
-in
 
 let
 toNix = \(x:Text) -> { nixExpr = x }
-in
 let
 toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = x ++ " " ++ y }
-in
 let
 toNixShow = \(x:Natural) -> toNix (Natural/show x)
-in
 let
 -- TODO With Coyoneda, the config can only depend on a single outout
 -- Switch to a free (finally encoded?) Applicative/Alternative to allow depending on multiple outputs
 Attr = FreeAp AttrF
-in
 let
 mapAttr = (FreeAp_functor AttrF).map
-in
 let
 liftA2Attr
   :   ∀(a : Type)
@@ -338,10 +316,8 @@ liftA2Attr
     → Attr b
     → Attr c
   = liftA2 Attr (FreeAp_applicative AttrF)
-in
 let
 id = \(a:Type) -> \(x:a) -> x
-in
 let
 someT
   : PrimAttr -> Optional Text
@@ -351,7 +327,6 @@ someT
     , N = \(x:Natural) -> (None Text)
     }
     x
-in
 -- See NOTE [Safe attributes]
 
 let unsafeTextAttr = \(name:Text) ->
@@ -391,7 +366,6 @@ someNatAttr
 -- for dropping in /etc/nixos/configuration.nix
 let
 NodeConf = {nixExpr:Text}
-in
 
 let
 AwsInstanceR =
@@ -405,13 +379,11 @@ AwsInstanceR =
   -- Generate a set of static files (subpaths of /var/static)
   , staticFiles : List { path : Text, content : Text }
   }
-in
 
 let
 AwsIAMUserR =
   { name : Text
   }
-in
 
 -- AWS IAM Group
 -- In TF this generates both the aws_iam_group and aws_iam_group_membership resources.
@@ -420,19 +392,16 @@ AwsIAMGroupR =
   { name : Text
   , members : List AwsIAMUserR
   }
-in
 
 let
 AwsIAMRoleR =
   { assumeRolePolicy : Text
   }
-in
 
 let
 AwsIAMPolicyR =
   { arn : Text
   }
-in
 
 let
 AwsResource =
@@ -445,10 +414,8 @@ AwsResource =
   | AwsIAMRole : AwsIAMRoleR
   | AwsIAMPolicy : AwsIAMPolicyR
   >
-in
 let
 AwsResources = constructors AwsResource
-in
 
 let
 foldMap =
@@ -463,7 +430,6 @@ foldMap =
   -- List/fold (m.compose . m.single) m.empty
   List/fold a xs r (\(x : a) -> m.compose (m.single x)) m.empty
   : r
-in
 
 let
 concatMapSepBy =
@@ -481,11 +447,9 @@ concatMapSepBy =
     }
     in pre ++ inner ++ end
   : Text
-in
 
 let
 noFiles = [] : List {content:Text,path:Text}
-in
 
 
 {- TODO
@@ -719,8 +683,10 @@ let awsInstanceToInput
     , attrNames = getAttrNames instance.config
     , tfContinue = runAttr instance.config
     }
-in
 
+
+
+in
 
 
 -- Examples

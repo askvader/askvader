@@ -548,7 +548,17 @@ in
  -      ((False,3),["4"])
  -
  -  Use this to obtain the following at top-level
- -    [{name:Text, attrNames: [Text], attrCont: [Text] -> NodeConf}]
+ -    [{ name:Text
+ -      , tfAttrs : TFResourceDecl
+ -      , attrNames: [Text], attrCont: [Text] -> NodeConf}]
+ -
+ - Write simple Haskell program that recieves this,
+ - generates TF files and runs it. Note the attrCont should be
+ - normalized and written as a Dhall expression in the first
+ - argument to the external_resource.
+ -
+ - Adapt 'eval' to compose recieved expressions, *normalize*,
+ - then feed back to TF.
  -}
 
 [ AwsResources.AwsInstance

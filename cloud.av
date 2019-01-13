@@ -1,43 +1,32 @@
 
-let
-concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
-in
+let concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
 let
 generate = ./vendor/dhall-lang/Prelude/List/generate
-in
 
 let
 Functor = ./vendor/dhall-bhat/Functor/Type
-in
 let
 List_functor = ./vendor/dhall-bhat/List/functor
-in
 let
 Applicative = ./vendor/dhall-bhat/Applicative/Type
-in
 let
 liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
-in
 
 let
 Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
-in
 let
 liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
-in
 let
 mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
-in
 
 
 -- Free Alternative (using final encoding)
-let T = Type in
-let TT = Type -> Type in
+let T = Type
+let TT = Type -> Type
 let
 FreeAp = \(f:TT) -> \(a:T) ->
   forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
 
-in
 let
 FreeAp_functor
   : forall (f : TT) -> Functor (FreeAp f)
@@ -55,7 +44,6 @@ FreeAp_functor
         ): FreeAp ff b
         )
     }
-in
 let
 FreeAp_applicative
   : forall (f : TT) -> Applicative (FreeAp f)
@@ -77,7 +65,6 @@ FreeAp_applicative
          -> ggAp.ap a b (f gg ggAp k) (x gg ggAp k)
          )
     } /\ FreeAp_functor ff
-in
 let
 liftFreeAp
   : forall (f : TT) -> forall (a : T) -> f a -> FreeAp f a
@@ -587,9 +574,7 @@ in
 -- Any changes to the Evaluator protocol (types prefixed with Evaluator) must be echoed on
 -- the Haskell side.
 
-let
-EvaluatorInput =
-  List
+let EvaluatorInput =
    -- Terraform code before the tfContinue block
    { tfCodeBefore : Text
    -- Terraform code after the tfCodeAfter block
@@ -600,11 +585,48 @@ EvaluatorInput =
    -- can not depend on Attr values. We could enrich the return type here to include more
    -- such data if needed.
    , attrNames: List Text
-   , tfContinue: List PrimAttr -> NodeConf
+   , tfContinue: List PrimAttr -> Optional NodeConf
    }
+
+let Optional_monad = ./vendor/dhall-bhat/Optional/monad
+let Optional_functor = ./vendor/dhall-bhat/Optional/functor
+let StateT = ./vendor/dhall-bhat/StateT/Type
+let StateT_applicative = ./vendor/dhall-bhat/StateT/applicative
+  (List PrimAttr) Optional Optional_monad
+
+let attrParserToState
+  : forall (a : Type) -> AttrF a -> StateT (List PrimAttr) Optional a
+  =    \(a:T)
+    -> \(x:AttrF a)
+    -- FIXME this always fails...
+    -> ((\(s:List PrimAttr) -> None {val:a,state:List PrimAttr}):StateT (List PrimAttr) Optional a)
+
+-- forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
+let foo
+  : Attr NodeConf -> List PrimAttr -> Optional NodeConf
+  = \(attr : Attr NodeConf) -> \(inputs : List PrimAttr) ->
+    let parser
+      : StateT (List PrimAttr) Optional NodeConf
+      = attr
+        (StateT (List PrimAttr) Optional)
+        StateT_applicative
+        attrParserToState
+    in
+      Optional_functor.map
+        {val:NodeConf,state:List PrimAttr}
+        NodeConf
+        (\(x:{val:NodeConf,state:List PrimAttr}) -> x.val)
+        (parser inputs)
+
+let awsInstanceToInput
+  : AwsInstanceR -> EvaluatorInput
+  = \(instance : AwsInstanceR) ->
+    { tfCodeBefore = "TODO"
+    , tfCodeAfter = "TODO"
+    , attrNames = ["TODO"]
+    , tfContinue = foo instance.config
+    }
 in
-
-
 
 
 
@@ -689,3 +711,6 @@ in
 -- deploys a bunch of expressions in sequence and verifies the
 -- given URL comes up within the given time.
 -- Note some 'test' fields sketched above.
+
+
+-- TODO remove all 'in' and use formatter!

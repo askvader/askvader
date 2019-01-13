@@ -540,6 +540,13 @@ in
  -}
 
 
+{- TODO run the Attr parser!
+ - Also run in Const to determine attr names
+ -
+ - > let readerToState  = (\(ReaderT f) -> StateT (\s -> Identity (runIdentity $ f (head s), (tail s)))) :: forall s x . Reader s x -> State [s] x
+ - > runState (runAp readerToState (liftA2 (,) (liftAp (reader (read @Bool))) (liftAp (reader (read @Int))))) ["False","3","4"]
+ -      ((False,3),["4"])
+ -}
 
 [ AwsResources.AwsInstance
   { name = "x"

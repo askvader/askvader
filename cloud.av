@@ -758,7 +758,11 @@ let awsInstanceToInput
             ${staticFileBlock}
             provisioner "remote-exec" {
               inline = [
+                "echo *** Start of /etc/nixos/construction.nix ***",
                 "cat /etc/nixos/configuration.nix",
+                "echo",
+                "echo *** End of /etc/nixos/construction.nix ***",
+
                 "nixos-rebuild switch"
               ]
             }

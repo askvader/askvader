@@ -694,7 +694,7 @@ in
 --
 
 -- [ AwsResources.AwsInstance
-(
+[
 awsInstanceToInput
   { name = "x"
   , staticFiles = noFiles
@@ -704,9 +704,10 @@ awsInstanceToInput
         (pureAttr Text "y")
         (mapAttr Natural Text Natural/show someNatAttr)
   }
-)
+]
+
 -- .attrNames
-.tfContinue ([PrimAttr.N 2] : List PrimAttr)
+-- .tfContinue ([PrimAttr.N 2] : List PrimAttr)
 
 
 -- ]

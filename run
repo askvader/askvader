@@ -16,6 +16,62 @@ import System.Process
 import Data.List (intercalate)
 import qualified Data.Text as Text
 import Dhall
+import Dhall.Core
+import Dhall.Parser
+import Dhall.Import (load)
+import Dhall.Pretty
+import Dhall.TypeCheck (X(..))
+import Data.Foldable (toList)
+import GHC.Generics (from)
+import Dhall.Map (Map)
+import qualified Dhall.Map as Map
+
+data EvalInput = EvalInput
+  { tfCodeAfter :: Text
+  , tfCodeBefore :: Text
+  , attrNames :: [Text]
+  , tfContinue :: Expr X X
+  }
+
+parseInputs :: Expr X X -> IO [EvalInput]
+parseInputs x = case x of
+  ListLit _ xs -> traverse parseInput $ toList xs
+  _ -> error "eval: Not a list"
+
+parseInput :: Expr X X -> IO EvalInput
+parseInput x = case x of
+  RecordLit xs -> case
+    (Map.lookup "tfCodeAfter" xs, Map.lookup "tfCodeBefore" xs, Map.lookup "attrNames" xs, Map.lookup "tfContinue" xs) of
+    (Just tfCodeAfterE, Just tfCodeBeforeE, Just attrNamesE, Just tfContinue) -> do
+      tfCodeAfter  <- rawInput strictText tfCodeAfterE
+      tfCodeBefore <- rawInput strictText tfCodeBeforeE
+      attrNames    <- rawInput (list strictText) attrNamesE
+      pure $ EvalInput
+        tfCodeAfter
+        tfCodeBefore
+        attrNames
+        tfContinue
+    _ -> error "eval: Bad record"
+  _ -> error "eval: Not a record"
+
+writeTF :: [EvalInput] -> Text
+writeTF = mconcat . fmap writeEI
+  where
+  writeEI e = tfCodeBefore e
+    <> (Text.pack $ show $ prettyCharacterSet ASCII $ tfContinue e)
+    <> tfCodeAfter e
 
 main = do
-  putStrLn "TODO"
+  inp <- readFile "cloud.av" -- TODO more options
+  inp1 <- readProcess "dhall" ["resolve"] inp
+  inp2 <- readProcess "dhall" ["normalize"] inp1
+  case exprFromText "input" $ Text.pack inp2 of
+    Left e -> error $ show e
+    Right res -> do
+      res1 <- denote <$> load res
+      print "OK"
+      -- print $ from $ res1
+      inputs <- parseInputs res1
+      writeFile "tmp.tf" $ Text.unpack $ writeTF inputs
+      readProcess "terraform" ["apply","-auto-approve"] ""
+

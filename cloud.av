@@ -783,9 +783,9 @@ in
 -- Examples
 --
 
--- [ AwsResources.AwsInstance
+-- TODO handle all AwsResources
+map AwsInstanceR EvaluatorInput awsInstanceToInput
 [
-awsInstanceToInput
   { name = "x"
   , staticFiles = noFiles
   , config =

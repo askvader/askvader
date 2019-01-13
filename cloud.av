@@ -1,474 +1,784 @@
 
 let concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
+let
+generate = ./vendor/dhall-lang/Prelude/List/generate
 
-let generate = ./vendor/dhall-lang/Prelude/List/generate
+let
+Functor = ./vendor/dhall-bhat/Functor/Type
+let
+List_functor = ./vendor/dhall-bhat/List/functor
+let
+Applicative = ./vendor/dhall-bhat/Applicative/Type
+let
+liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
 
-let Functor = ./vendor/dhall-bhat/Functor/Type
+let
+Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
+let
+liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
+let
+mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
 
-let List_functor = ./vendor/dhall-bhat/List/functor
 
-let Applicative = ./vendor/dhall-bhat/Applicative/Type
-
-let liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
-
-let Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
-
-let liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
-
-let mapCoyoneda =
-      λ(f : Type → Type) → (./vendor/dhall-bhat/Coyoneda/functor f).map
-
+-- Free Alternative (using final encoding)
 let T = Type
+let TT = Type -> Type
+let
+FreeAp = \(f:TT) -> \(a:T) ->
+  forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
 
-let TT = Type → Type
+let
+FreeAp_functor
+  : forall (f : TT) -> Functor (FreeAp f)
+  = \(ff : TT) ->
+    { map =
+         \(a : T)
+      -> \(b : T)
+      -> \(f : a -> b)
+      -> \(g : FreeAp ff a)
+      ->
+        ((  \(gg : TT)
+        -> \(ggAp : Applicative gg)
+        -> \(k : forall (x:T) -> ff x -> gg x)
+        -> ggAp.map a b f (g gg ggAp k)
+        ): FreeAp ff b
+        )
+    }
+let
+FreeAp_applicative
+  : forall (f : TT) -> Applicative (FreeAp f)
+  = \(ff : TT) ->
+    { pure =  λ(a : Type) → λ(x : a) →
+      (( \(gg : TT)
+      -> \(ggAp : Applicative gg)
+      -> \(k_ : forall (x:T) -> ff x -> gg x)
+      -> ggAp.pure a x
+      ) : FreeAp ff a)
+    , ap =
+        \(a:T)
+      ->\(b:T)
+      ->\(f:FreeAp ff (a -> b))
+      ->\(x:FreeAp ff a)
+      -> ( \(gg:TT)
+         ->\(ggAp : Applicative gg)
+         ->\(k : forall (x:T) -> ff x -> gg x)
+         -> ggAp.ap a b (f gg ggAp k) (x gg ggAp k)
+         )
+    } /\ FreeAp_functor ff
+let
+liftFreeAp
+  : forall (f : TT) -> forall (a : T) -> f a -> FreeAp f a
+  =   \(f:TT)
+    ->\(a:T)
+    ->\(x:f a)
+    ->( \(g:TT)
+      ->\(gAp:Applicative g)
+      ->\(k : forall (x:T) -> f x -> g x)
+      -> k a x)
+let
+retractFreeAp
+  : forall (f : TT)
+  -> forall (a : T)
+  -> forall (ap : Applicative f)
+  -> forall (fAp : FreeAp f a)
+  -> f a
+  = \(f:TT) -> \(a:T) ->
+  let id = \(b:T) -> \(x : f b) -> x in
+  \(ap:Applicative f) -> \(fAp:FreeAp f a) ->
+    fAp f ap id : f a
 
-let FreeAp =
-        λ(f : TT)
-      → λ(a : T)
-      → ∀(g : TT) → Applicative g → (∀(x : T) → f x → g x) → g a
 
-let FreeAp_functor
-    : ∀(f : TT) → Functor (FreeAp f)
-    =   λ(ff : TT)
-      → { map =
-              λ(a : T)
-            → λ(b : T)
-            → λ(f : a → b)
-            → λ(g : FreeAp ff a)
-            →   (   λ(gg : TT)
-                  → λ(ggAp : Applicative gg)
-                  → λ(k : ∀(x : T) → ff x → gg x)
-                  → ggAp.map a b f (g gg ggAp k)
-                )
-              : FreeAp ff b
-        }
+-- Terraform providers used by the code we generate
+-- Hardcoded for now
+let
+standardProviders =
+  ''
+  provider "aws" {
+    region  = "eu-west-2"
+    version = "= 1.54.0"
+    profile = "dev"
+  }
+  provider "null" {
+    version = "= 1.0"
+  }
+  provider "external" {
+    version = "= 1.0.0"
+  }
+  ''
 
-let FreeAp_applicative
-    : ∀(f : TT) → Applicative (FreeAp f)
-    =   λ(ff : TT)
-      →   { pure =
-                λ(a : Type)
-              → λ(x : a)
-              →   (   λ(gg : TT)
-                    → λ(ggAp : Applicative gg)
-                    → λ(k_ : ∀(x : T) → ff x → gg x)
-                    → ggAp.pure a x
-                  )
-                : FreeAp ff a
-          , ap =
-                λ(a : T)
-              → λ(b : T)
-              → λ(f : FreeAp ff (a → b))
-              → λ(x : FreeAp ff a)
-              → λ(gg : TT)
-              → λ(ggAp : Applicative gg)
-              → λ(k : ∀(x : T) → ff x → gg x)
-              → ggAp.ap a b (f gg ggAp k) (x gg ggAp k)
-          }
-        ∧ FreeAp_functor ff
+-- Standard AWS options
+-- Hardcoded for now
+let
+standardAwsOptions =
+  -- AMI from https://nixos.org/nixos/download.html
+  -- Nixos 18.09
+  { ami = "ami-0dada3805ce43c55e"
+  , keyName = "admin"
+	, instanceType = "t2.micro"
+	-- , instanceType = "t2.medium"
+  -- instance_type   = "m5d.2xlarge"
+	-- , instanceType   = "t2.medium"
+		-- instance_type = "i3.xlarge"
+    --
+  -- In GB
+  , rootBlockDeviceVolumeSize = 30 -- TODO too big?
+  }
 
-let liftFreeAp
-    : ∀(f : TT) → ∀(a : T) → f a → FreeAp f a
-    =   λ(f : TT)
-      → λ(a : T)
-      → λ(x : f a)
-      → λ(g : TT)
-      → λ(gAp : Applicative g)
-      → λ(k : ∀(x : T) → f x → g x)
-      → k a x
 
-let retractFreeAp
-    : ∀(f : TT) → ∀(a : T) → ∀(ap : Applicative f) → ∀(fAp : FreeAp f a) → f a
-    =   λ(f : TT)
-      → λ(a : T)
-      → let id = λ(b : T) → λ(x : f b) → x
 
-        in  λ(ap : Applicative f) → λ(fAp : FreeAp f a) → fAp f ap id : f a
 
-let standardProviders =
-      ''
-      provider "aws" {
-        region  = "eu-west-2"
-        version = "= 1.54.0"
-        profile = "dev"
-      }
-      provider "null" {
-        version = "= 1.0"
-      }
-      provider "external" {
-        version = "= 1.0.0"
-      }
-      ''
 
-let standardAwsOptions =
-      { ami =
-          "ami-0dada3805ce43c55e"
-      , keyName =
-          "admin"
-      , instanceType =
-          "t2.micro"
-      , rootBlockDeviceVolumeSize =
-          30
-      }
 
-let AwsAttribute =
-      < S3BucketId :
-          Text
-      | S3BucketRegion :
-          Text
-      | AwsInstancePrivateIp :
-          Text
-      | AwsIAMUserARN :
-          Text
-      | AwsIAMUserUniqueId :
-          Text
-      >
 
-let typeOf =
-        λ(x : AwsAttribute)
-      → merge
-        { S3BucketId =
-            λ(_ : Text) → "Text"
-        , S3BucketRegion =
-            λ(_ : Text) → "Text"
-        , AwsInstancePrivateIp =
-            λ(_ : Text) → "Text"
-        , AwsIAMUserARN =
-            λ(_ : Text) → "Text"
-        , AwsIAMUserUniqueId =
-            λ(_ : Text) → "Text"
-        }
-        x
-        : Text
+--
+-- AWS
+--
+-- TODO flatten for easier construction
+-- Could also provide extra records like:
+--      AwsAttributes.Instance.PrivateIp x
+--      AwsAttributes.Text.Instance.PrivateIp x
+--      AwsAttributes.Bool.Instance.AssociatePublicIpAddress
+--
 
-let AwsAttributes = constructors AwsAttribute
 
-let CannedACL = < Private : {} | PublicRead : {} | PublicReadWrite : {} >
+--
+-- In Terraform attributes provide 'delayed' values that become availible as
+-- the resource graph is traversed and a resource is created.
+-- We currently only support attributes of the following types:
+--    Text
+--    Natural
+--    Boolean
+--
+-- Attributes can be used when defining resources, which implies a dependency.
+-- Note recursive resource dependencies are *not* allowed, the resource graph
+-- must be a DAG.
+--
+-- You can pass an arbirary number of attributes to a server or container
+-- configuration expression. They types must correspond, e.g.
+--
+--    { config = \(x : Text) -> \(y : Optional Text) -> ...
+--    , attributes = [someTextAttr, someOptionalAttr...]
+--    ... }
+--
+let
+AwsAttribute =
+  -- TODO all these Texts refer to the TF resource name...
+  < S3BucketId : Text -- { name : Text }
+  | S3BucketRegion : Text -- { name : Text }
+  | AwsInstancePrivateIp : Text -- { name : Text }
+  | AwsIAMUserARN : Text
+  | AwsIAMUserUniqueId : Text
+  >
 
-let VersioningOptions = { mfaDelete : Bool }
+--
+-- Returns the Dhall type of the given AwsAttribute
+--
+let
+typeOf = \(x : AwsAttribute) ->
+  merge
+  { S3BucketId = \(_:Text) -> "Text"
+  , S3BucketRegion = \(_:Text) -> "Text"
+  , AwsInstancePrivateIp = \(_:Text) -> "Text"
+  , AwsIAMUserARN = \(_:Text) -> "Text"
+  , AwsIAMUserUniqueId = \(_:Text) -> "Text"
+  }
+  x : Text
 
-let S3BucketR =
-      { resourceName :
-          Text
-      , bucketName :
-          Optional Text
-      , acl :
-          Optional CannedACL
-      , versioning :
-          Optional VersioningOptions
-      }
+let
+AwsAttributes = constructors AwsAttribute
 
-let Blob = List Natural
 
-let S3BucketObjectSource = < Utf8 : Text | Binary : Blob >
+let
+CannedACL =
+	< Private : {}
+	| PublicRead : {}
+	| PublicReadWrite : {}
+	-- TODO ...
+	>
 
-let S3BucketObjectR =
-      { bucketName : Text, key : Text, source : S3BucketObjectSource }
+let
+VersioningOptions = { mfaDelete : Bool }
+
+let
+S3BucketR =
+  { resourceName : Text
+  , bucketName : Optional Text
+  , acl : Optional CannedACL
+	, versioning : Optional VersioningOptions
+  }
+
+let
+Blob = List Natural -- All values >255 are normalized as 0
+
+let
+S3BucketObjectSource =
+  < Utf8 : Text -- TODO what is Dhall text?
+                -- Following dhall-haskell it is Data.Text.Text, which has a canonical binary representation (UTF8)
+                -- We should use that!
+  | Binary : Blob
+  >
+
+let
+S3BucketObjectR =
+  { bucketName : Text
+  , key : Text
+  , source : S3BucketObjectSource
+  }
+
+-- TODO static website example using S3 bucket w. PublicRead
 
 let Monoid = ./vendor/dhall-bhat/Monoid/Type
 
-let Const = λ(a : Type) → λ(b : Type) → a
+-- Const functor
+let
+Const = \(a : Type) -> \(b : Type) -> a
+let Const_functor = \(x:Type) ->
+  { map =
+    \(a:T)
+      -> \(b:T)
+      -> \(f:a -> b)
+      -> \(c:Const x a) -> c
+  } : Functor (Const x)
+let Const_applicative = \(m:Type) -> \(mon:Monoid m) ->
+  ({ pure = \(a:T) -> \(x:a) -> mon.unit
+  , ap =
+    \(a:T)
+    -> \(b:T)
+    -> \(cf : Const m (a -> b))
+    -> \(cx : Const m a)
+    -> mon.op cf cx
+  } /\ Const_functor m
+  )
+  : Applicative (Const m)
 
-let Const_functor =
-        λ(x : Type)
-      →   { map = λ(a : T) → λ(b : T) → λ(f : a → b) → λ(c : Const x a) → c }
-        : Functor (Const x)
+-- How to configure an AWS instance
+--
+-- For now
+-- 1) We only support launhing NixOS instances
+-- 2) This must be a valid Dhall expression that compiles to a valid NixOS config
+let
+AwsInstanceConfig = Text
 
-let Const_applicative =
-        λ(m : Type)
-      → λ(mon : Monoid m)
-      →     { pure =
-                λ(a : T) → λ(x : a) → mon.unit
-            , ap =
-                  λ(a : T)
-                → λ(b : T)
-                → λ(cf : Const m (a → b))
-                → λ(cx : Const m a)
-                → mon.op cf cx
-            }
-          ∧ Const_functor m
-        : Applicative (Const m)
 
-let AwsInstanceConfig = Text
 
-let PrimAttr = < N : Natural | T : Text >
+--
+-- NOTE [Safe attributes]
+--
+-- Functions like unsafeTextAttr assume that the given string represents a valid attribute
+-- of the given type (e.g. Text in the case of unsafeTextAttr). The user should not be allowed
+-- to specify this.
+--
+-- We could solve this by fake-GADTS, by making the library a function of (attr : Type -> Type)
+-- and a record {fooAttr : attr Text, barAttr : attr Natural}
+--
+-- Full example
+--
+--    let
+--    	Id = \(a : Type) → a
+--    in let
+--    	Const = \(a : Type) → \(b : Type) → a
+--    in
+--
+--    (\(f:Type -> Type) ->
+--     \(attrs : { foo : f Natural, bar : f Text }) ->
+--     attrs.bar
+--    )
+--    (Const Text)
+--    {foo = "fooAttr", bar = "barAttr"}
+--
+-- TODO later
+-- Because Text is not inspectable in Dhall, the evaluator must
+-- convert Terraform text to suitable types
+let
+PrimAttr = <N:Natural | T:Text>
+let
+AttrF = \(a:Type) -> {attrName:Text, attrParse:PrimAttr -> Optional a}
 
-let AttrF = λ(a : Type) → { attrName : Text, attrParse : PrimAttr → Optional a }
+let
+toNix = \(x:Text) -> { nixExpr = x }
+let
+toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = x ++ " " ++ y }
+let
+toNixShow = \(x:Natural) -> toNix (Natural/show x)
+let
+-- TODO With Coyoneda, the config can only depend on a single outout
+-- Switch to a free (finally encoded?) Applicative/Alternative to allow depending on multiple outputs
+Attr = FreeAp AttrF
+let
+mapAttr = (FreeAp_functor AttrF).map
+let
+liftA2Attr
+  :   ∀(a : Type)
+    → ∀(b : Type)
+    → ∀(c : Type)
+    → (a → b → c)
+    → Attr a
+    → Attr b
+    → Attr c
+  = liftA2 Attr (FreeAp_applicative AttrF)
+let
+id = \(a:Type) -> \(x:a) -> x
+let
+someT
+  : PrimAttr -> Optional Text
+  = \(x:PrimAttr) ->
+  merge
+    { T = \(x:Text) -> Some x
+    , N = \(x:Natural) -> (None Text)
+    }
+    x
+-- See NOTE [Safe attributes]
 
-let toNix = λ(x : Text) → { nixExpr = x }
-
-let toNix2 = λ(x : Text) → λ(y : Text) → { nixExpr = x ++ " " ++ y }
-
-let toNixShow = λ(x : Natural) → toNix (Natural/show x)
-
-let Attr = FreeAp AttrF
-
-let mapAttr = (FreeAp_functor AttrF).map
-
-let liftA2Attr
-    :   ∀(a : Type)
-      → ∀(b : Type)
-      → ∀(c : Type)
-      → (a → b → c)
-      → Attr a
-      → Attr b
-      → Attr c
-    = liftA2 Attr (FreeAp_applicative AttrF)
-
-let id = λ(a : Type) → λ(x : a) → x
-
-let someT
-    : PrimAttr → Optional Text
-    =   λ(x : PrimAttr)
-      → merge { T = λ(x : Text) → Some x, N = λ(x : Natural) → None Text } x
-
-let unsafeTextAttr =
-        λ(name : Text)
-      → liftFreeAp
-        AttrF
-        Text
-        { attrName =
-            name
-        , attrParse =
-              λ(x : PrimAttr)
-            → merge
-              { T = λ(x : Text) → Some x, N = λ(x : Natural) → None Text }
-              x
+let unsafeTextAttr = \(name:Text) ->
+  liftFreeAp AttrF Text
+    { attrName = name
+    , attrParse = \(x:PrimAttr) ->
+      merge
+        { T = \(x:Text) -> Some x
+        , N = \(x:Natural) -> (None Text)
         }
-
-let someAttr = unsafeTextAttr "thisAttrReturnsText" : Attr Text
-
-let unsafeNatAttr =
-        λ(name : Text)
-      → liftFreeAp
-        AttrF
-        Natural
-        { attrName =
-            name
-        , attrParse =
-              λ(x : PrimAttr)
-            → merge
-              { N = λ(x : Natural) → Some x, T = λ(x : Text) → None Natural }
-              x
+        x
+    }
+let
+someAttr
+  = unsafeTextAttr  "thisAttrReturnsText"
+  : Attr Text
+let unsafeNatAttr = \(name:Text) ->
+  liftFreeAp AttrF Natural
+    { attrName = name
+    , attrParse = \(x:PrimAttr) ->
+      merge
+        { N = \(x:Natural) -> Some x
+        , T = \(x:Text) -> (None Natural)
         }
+        x
+    }
+let
+someNatAttr
+  = unsafeNatAttr  "thisAttrReturnsNat"
+  : Attr Natural
 
-let someNatAttr = unsafeNatAttr "thisAttrReturnsNat" : Attr Natural
 
-let NodeConf = { nixExpr : Text }
+-- TODO
+-- This types represents (exactly) the properties of a runnable node (container, EC2 instance, etc)
+--
+-- For now, all nodes are NixOS based, and Conf is an expression in the Nix config language, suitable
+-- for dropping in /etc/nixos/configuration.nix
+let
+NodeConf = {nixExpr:Text}
 
-let AwsInstanceR =
-      { name :
-          Text
-      , config :
-          Attr NodeConf
-      , staticFiles :
-          List { path : Text, content : Text }
-      }
+let
+AwsInstanceR =
+  -- Affects name of instance
+  { name : Text
 
-let AwsIAMUserR = { name : Text }
+  , config : Attr NodeConf
 
-let AwsIAMGroupR = { name : Text, members : List AwsIAMUserR }
+  -- Attributes to pass to the configuration
+  -- , configAttrs : List AwsAttribute
+  -- Generate a set of static files (subpaths of /var/static)
+  , staticFiles : List { path : Text, content : Text }
+  }
 
-let AwsIAMRoleR = { assumeRolePolicy : Text }
+let
+AwsIAMUserR =
+  { name : Text
+  }
 
-let AwsIAMPolicyR = { arn : Text }
+-- AWS IAM Group
+-- In TF this generates both the aws_iam_group and aws_iam_group_membership resources.
+let
+AwsIAMGroupR =
+  { name : Text
+  , members : List AwsIAMUserR
+  }
 
-let AwsResource =
-      < AwsInstance :
-          AwsInstanceR
-      | S3Bucket :
-          S3BucketR
-      | S3BucketObject :
-          S3BucketObjectR
-      | AwsIAMUser :
-          AwsIAMUserR
-      | AwsIAMGroup :
-          AwsIAMGroupR
-      | AwsIAMRole :
-          AwsIAMRoleR
-      | AwsIAMPolicy :
-          AwsIAMPolicyR
-      >
+let
+AwsIAMRoleR =
+  { assumeRolePolicy : Text
+  }
 
-let AwsResources = constructors AwsResource
+let
+AwsIAMPolicyR =
+  { arn : Text
+  }
 
-let foldMap =
-        λ(a : Type)
-      → λ(xs : List a)
-      → λ(r : Type)
-      → λ(m : { empty : r, single : a → r, compose : r → r → r })
-      → List/fold a xs r (λ(x : a) → m.compose (m.single x)) m.empty : r
+let
+AwsResource =
+  < AwsInstance : AwsInstanceR
+  | S3Bucket : S3BucketR
+  | S3BucketObject : S3BucketObjectR
 
-let concatMapSepBy =
-        λ(pre : Text)
-      → λ(end : Text)
-      → λ(delim : Text)
-      → λ(a : Type)
-      → λ(show : a → Text)
-      → λ(xs : List a)
-      → let inner =
-              foldMap
-              a
-              xs
-              Text
-              { empty =
-                  ""
-              , single =
-                  show
-              , compose =
-                  λ(x : Text) → λ(y : Text) → x ++ delim ++ y
-              }
+  | AwsIAMUser : AwsIAMUserR
+  | AwsIAMGroup : AwsIAMGroupR
+  | AwsIAMRole : AwsIAMRoleR
+  | AwsIAMPolicy : AwsIAMPolicyR
+  >
+let
+AwsResources = constructors AwsResource
 
-        in  pre ++ inner ++ end : Text
+let
+foldMap =
+  \(a : Type) ->
+  \(xs : List a) ->
+  \(r : Type) ->
+  \(m :
+    { empty : r
+    , single : a -> r
+    , compose : r -> r -> r
+    } ) ->
+  -- List/fold (m.compose . m.single) m.empty
+  List/fold a xs r (\(x : a) -> m.compose (m.single x)) m.empty
+  : r
 
-let noFiles = [] : List { content : Text, path : Text }
+let
+concatMapSepBy =
+  \(pre : Text) ->
+  \(end : Text) ->
+  \(delim : Text) ->
+  \(a : Type) ->
+  \(show : a -> Text) ->
+  \(xs : List a) ->
+    let inner =
+    foldMap a xs Text
+    { empty = ""
+    , single = show
+    , compose = \(x : Text) -> \(y : Text) -> x ++ delim ++ y
+    }
+    in pre ++ inner ++ end
+  : Text
+
+let
+noFiles = [] : List {content:Text,path:Text}
+
+
+{- TODO
+ - Write a new evaluator (in Haskell?) that extracts config code and
+ -  * Extracts functions of TF-generated attributes, writes them to eval fake-resources (as before)
+ -  * Generates top level TF (by looking at the attrName in the free ap/coyoneda)
+ -  * Invokes TF
+ - Basically this is simple:
+ - Given an AwsInstanceR r, we can extract the attribute and a parsing function using
+ -
+		⊢ r.config Text ( \(c:Type) ->
+				\(conv:c -> {nixExpr:Text}) ->
+						\(attrF: AttrF c) -> attrF.attrName )
+		⊢ \(res:Text) ->
+				r.config {nixExpr:Text}
+							( \(c:Type)
+									-> \(conv:c -> NodeConf)
+									-> \(attrF: AttrF c)
+									-> conv (attrF.attrParse res) )
+ -
+ - We could write a function in Dhall (or in Haskell, expr -> expr) that replaces all resources
+ - with a pair
+ -    { attrName : Text, attrCont : DynVal|Text -> NodeConf, tfDecls : Text }
+ - Render the above as a single TF file (this is impossible in Dhall!)
+ -
+ -
+ - NOTE currently NodeConf is Text, so the above also works with virtualization (e.g. for AMI/Docker,
+ - create a packer script starting from a base image and provisioning with the Nix expression).
+ - If NodeConf is changed to a *function*, the evaluator will use some Dhall backend to convert
+ - this to a runnable image. This could work in several ways:
+ -    Blob -> Blob                 Become a (pure) web server
+ -    Blob -> State Blob Blob      Become a web server with (transient) state, backed by its own harddrive
+ -    Blob -> NodeConf             Wait for a web request, then *become* the given config
+ -    Blob -> Map Text NodeConf    Wait for a web request, then *launch new nodes* with the given config
+ -    A -> B                       Become a processor in a typed channel
+ -
+ -
+ - TODO LATER special resources for cached provisions (AMIs/containers)
+ - AMI-based, implemented by running packer on host machine:
+ -  * Resource a la AwsInstance that builds the NodeConf to an AMI and returns registered AMI
+ -  * Resource a la AwsInstance that takes such an AMI instead of a NodeConf
+ -
+ -
+ -
+ - Implementation
+ -   Make name depend of TF config (including Nix expr) - reuse if exists in AWS account
+ -   Use external data source to call packer (with HS wrapper?)
+ -     Generates suitable JSON for packer and calls this
+ -       https://www.packer.io/docs/builders/amazon-ebs.html
+ -   Provide output attribute with the new AMI name
+ -   Provide this as an alternative input to AwsInstance
+
+ - Docker-based, implemented by running docker+packer on a special instance:
+ -  * Resource a la AwsInstance that builds a NodeConf to a Docker container placed in ECR
+ -  * Resource that launches containers in EKS
+ -
+ -
+ -
+ -
+ -
+ - TODO LATER
+ -    Provision a function (e.g. Text -> Text).
+ -
+ -    Provision a node with config (e.g. A -> NodeConf)
+ -
+ -
+ -
+ - TODO LATER
+ -
+ - Break recursive dependency between attrs/resources (using limited fixpoints?) to define safe
+ - mappings between resources/attrs (e.g. prevent looking up an attr of resource of type A from
+ - resource of type B).
+ -
+ - Or use something like the NOTE [Safe attributes] approach, hiding the Attr constructors and
+ - passing in a safe subset at the top level.
+ -
+ -}
+
+
+{- TODO run the Attr parser!
+ - Also run in Const to determine attr names
+ -
+ - > let readerToState  = (\(ReaderT f) -> StateT (\s -> Identity (runIdentity $ f (head s), (tail s)))) :: forall s x . Reader s x -> State [s] x
+ - > runState (runAp readerToState (liftA2 (,) (liftAp (reader (read @Bool))) (liftAp (reader (read @Int))))) ["False","3","4"]
+ -      ((False,3),["4"])
+ -
+ -  Use this to obtain the following at top-level
+ -    [{ tfCodeBefore : Text
+ -     , tfCodeAfter : Text
+ -     , attrNames: [Text]
+ -     , tfContinue: [PrimAttr] -> NodeConf
+ -     }]
+ -
+ - Write simple Haskell program that recieves this,
+ - generates TF files and runs it. Note the attrCont should be
+ - normalized and written as a Dhall expression in the first
+ - argument to the external_resource.
+ -
+ - Adapt 'eval' to compose recieved expressions, *normalize*,
+ - then feed back to TF.
+ -}
+
+
+
+
+
+-- NOTE [Evaluator layer]
+--
+-- The following types definne a protocol between the Dhall code and the Terraform evaluator.
+-- This works as follows:
+--
+--  * EvaluatorInput generates a static graph passed to Terraform, except for the
+--    tfContinue field, which is *normalized but not reduced to a serializable type*
+--  * For each node in the graph, we generates a special external_resource to recieve inputs.
+--    These are converted to PrimAttr, applied to the tfContinue expression and *normalized as before*
+--  * The resultant NodeConf expression is handled by the evaluator. For a NixOS config, the node
+--    is created and provisioned with the given expression.
+--
+-- Anything involving the evaluator protocol should be hidden from the user
+-- The main interface should be: user writes an expression of type (List AwsResource),
+-- (List KubernetesResource), and so on for each backend.
+
+-- NOTE  [Evaluator protocol]
+-- Any changes to the Evaluator protocol (types prefixed with Evaluator) must be echoed on
+-- the Haskell side.
 
 let EvaluatorInput =
-      { tfCodeBefore :
-          Text
-      , tfCodeAfter :
-          Text
-      , attrNames :
-          List Text
-      , tfContinue :
-          List PrimAttr → Optional NodeConf
-      }
+   -- Terraform code before the tfContinue block
+   { tfCodeBefore : Text
+   -- Terraform code after the tfCodeAfter block
+   , tfCodeAfter : Text
+   -- Spliced attributes and continuation
+   --
+   -- TODO returning NodeConf here implies that TF attributes other than 'uploaded config'
+   -- can not depend on Attr values. We could enrich the return type here to include more
+   -- such data if needed.
+   , attrNames: List Text
+   , tfContinue: List PrimAttr -> Optional NodeConf
+   }
 
 let Optional_monad = ./vendor/dhall-bhat/Optional/monad
-
 let Optional_functor = ./vendor/dhall-bhat/Optional/functor
-
 let StateT = ./vendor/dhall-bhat/StateT/Type
-
-let StateT_applicative =
-      ./vendor/dhall-bhat/StateT/applicative
-      (List PrimAttr)
-      Optional
-      Optional_monad
-
+let StateT_applicative = ./vendor/dhall-bhat/StateT/applicative
+  (List PrimAttr) Optional Optional_monad
 let indexed = ./vendor/dhall-lang/Prelude/List/indexed
-
 let filter = ./vendor/dhall-lang/Prelude/List/filter
-
 let map = ./vendor/dhall-lang/Prelude/List/map
-
 let not = ./vendor/dhall-lang/Prelude/Bool/not
-
 let isZero = ./vendor/dhall-lang/Prelude/Natural/isZero
-
 let uncons
-    :   ∀(a : Type)
-      → List a
-      → ∀(list : Type)
-      → ∀(cons : a → List a → list)
-      → ∀(nil : list)
-      → list
-    =   λ(a : T)
-      → let tail
-            : List a → List a
-            =   λ(xs : List a)
-              → map
-                { value : a, index : Natural }
-                a
-                (λ(x : { value : a, index : Natural }) → x.value)
-                ( filter
-                  { value : a, index : Natural }
-                  (λ(x : { value : a, index : Natural }) → not (isZero x.index))
-                  (indexed a xs)
-                )
-
-        in    λ(xs : List a)
-            → λ(r : T)
-            → λ(cons : a → List a → r)
-            → λ(nil : r)
-            → List/fold a xs r (λ(x : a) → λ(cs : r) → cons x (tail xs)) nil
+  : ∀(a : Type) → List a → ∀(list : Type) → ∀(cons : a → List a → list) → ∀(nil : list) → list
+  = \(a:T)
+    -> let tail
+        : List a -> List a
+        -- TODO faster
+        = \(xs:List a) ->
+          map {value:a,index:Natural} a (\(x:{value:a,index:Natural}) -> x.value)
+            (filter {value:a,index:Natural} (\(x:{value:a,index:Natural}) ->
+              not (isZero x.index))
+              (indexed a xs))
+        in
+       \(xs:List a)
+    -> \(r:T)
+    -> \(cons: a → List a → r)
+    -> \(nil:r)
+    -> List/fold a xs r (\(x:a) -> \(cs:r) -> cons x (tail xs)) nil
 
 let attrParserToState
-    : ∀(a : Type) → AttrF a → StateT (List PrimAttr) Optional a
-    =   λ(a : T)
-      → λ(attr : AttrF a)
-      →   (   λ(s : List PrimAttr)
-            → uncons
-              PrimAttr
-              s
-              (Optional { val : a, state : List PrimAttr })
-              (   λ(x : PrimAttr)
-                → λ(xs : List PrimAttr)
-                → Optional/fold
-                  a
-                  (attr.attrParse x)
-                  (Optional { val : a, state : List PrimAttr })
-                  (λ(x : a) → Some { val = x, state = xs })
-                  (None { val : a, state : List PrimAttr })
-              )
-              (None { val : a, state : List PrimAttr })
-          )
-        : StateT (List PrimAttr) Optional a
+  : forall (a : Type) -> AttrF a -> StateT (List PrimAttr) Optional a
+  =    \(a:T)
+    -> \(attr:AttrF a)
+    -> ( \(s:List PrimAttr)
+       ->
+        uncons PrimAttr s (Optional{val:a,state:List PrimAttr})
+        (    \(x:PrimAttr)
+          -> \(xs:List PrimAttr)
+          ->
+          Optional/fold a (attr.attrParse x) (Optional{val:a,state:List PrimAttr})
+            (\(x:a) -> Some {val=x,state=xs})
+            (None {val:a,state:List PrimAttr} )
+        )
+        (None {val:a,state:List PrimAttr})
+       )
+
+
+      : StateT (List PrimAttr) Optional a
 
 let attrParserToConst
-    : ∀(a : Type) → AttrF a → Const (List Text) a
-    = λ(a : T) → λ(attr : AttrF a) → [ attr.attrName ]
+  : forall (a : Type) -> AttrF a -> Const (List Text) a
+  = \(a : T)
+    -> \(attr : AttrF a)
+    -> [attr.attrName]
 
+-- forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
 let runAttr
-    : Attr NodeConf → List PrimAttr → Optional NodeConf
-    =   λ(attr : Attr NodeConf)
-      → λ(inputs : List PrimAttr)
-      → let parser
-            : StateT (List PrimAttr) Optional NodeConf
-            = attr
-              (StateT (List PrimAttr) Optional)
-              StateT_applicative
-              attrParserToState
+  : Attr NodeConf -> List PrimAttr -> Optional NodeConf
+  = \(attr : Attr NodeConf) -> \(inputs : List PrimAttr) ->
+    let parser
+      : StateT (List PrimAttr) Optional NodeConf
+      = attr
+        (StateT (List PrimAttr) Optional)
+        StateT_applicative
+        attrParserToState
+    in
+      Optional_functor.map
+        {val:NodeConf,state:List PrimAttr}
+        NodeConf
+        (\(x:{val:NodeConf,state:List PrimAttr}) -> x.val)
+        (parser inputs)
 
-        in  Optional_functor.map
-            { val : NodeConf, state : List PrimAttr }
-            NodeConf
-            (λ(x : { val : NodeConf, state : List PrimAttr }) → x.val)
-            (parser inputs)
-
-let Text_monoid =
-      { unit = "", op = λ(x : Text) → λ(y : Text) → x ++ y } : Monoid Text
-
+let Text_monoid = { unit = "", op = \(x:Text) -> \(y:Text) -> x ++ y } : Monoid Text
 let List_monoid = ./vendor/dhall-bhat/List/monoid
 
 let getAttrNames
-    : Attr NodeConf → List Text
-    =   λ(attr : Attr NodeConf)
-      → let r
-            : Const (List Text) NodeConf
-            = attr
-              (Const (List Text))
-              (Const_applicative (List Text) (List_monoid Text))
-              attrParserToConst
-
-        in  r
+  : Attr NodeConf -> List Text
+  = \(attr : Attr NodeConf) ->
+    let r
+      : Const (List Text) NodeConf
+      = attr
+        (Const (List Text))
+        (Const_applicative (List Text) (List_monoid Text))
+        attrParserToConst
+    in r
 
 let awsInstanceToInput
-    : AwsInstanceR → EvaluatorInput
-    =   λ(instance : AwsInstanceR)
-      → { tfCodeBefore =
-            "TODO"
-        , tfCodeAfter =
-            "TODO"
-        , attrNames =
-            getAttrNames instance.config
-        , tfContinue =
-            runAttr instance.config
-        }
+  : AwsInstanceR -> EvaluatorInput
+  = \(instance : AwsInstanceR) ->
+    { tfCodeBefore = "TODO"
+    , tfCodeAfter = "TODO"
+    , attrNames = getAttrNames instance.config
+    , tfContinue = runAttr instance.config
+    }
 
-in  ( awsInstanceToInput
-      { name =
-          "x"
-      , staticFiles =
-          noFiles
-      , config =
-          liftA2Attr
-          Text
-          Text
-          NodeConf
-          toNix2
-          ((FreeAp_applicative AttrF).pure Text "y")
-          (mapAttr Natural Text Natural/show someNatAttr)
-      }
-    ).tfContinue
-    ([ PrimAttr.N 2 ] : List PrimAttr)
+
+
+in
+
+
+-- Examples
+--
+
+-- [ AwsResources.AwsInstance
+(
+awsInstanceToInput
+  { name = "x"
+  , staticFiles = noFiles
+  , config =
+    	liftA2Attr Text Text NodeConf toNix2
+        --someAttr
+         ((FreeAp_applicative AttrF).pure Text "y")
+        (mapAttr Natural Text Natural/show someNatAttr)
+  }
+)
+-- .attrNames
+ .tfContinue ([PrimAttr.N 2] : List PrimAttr)
+
+
+-- ]
+
+-- TODO make use of the following Kubernetes networking notes
+--    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).
+--
+--    In any private k8s network you have IPs for nodes ('actual' machines), Pods and Services (faked, using iptables).
+--    To expose them externally, use NodePort/LoadBalancer/Ingress
+
+-- TODO do more: https://www.whizlabs.com/
+--  Esp. the security certificates
+
+-- TODO FIXME If provisioner fails, EC2 instances are not tainted in TF (presumably because only the fake
+-- null resource we generate actually fails to provision - those were added to ensure the Nix config is
+-- always repushed when it has changed - alternative way of doing that?).
+-- NOTE this is only a problem if the provisioner *breaks* the instance, e.g. by filling the harddrive
+
+-- TODO IAM group/role/policy (e.g. create S3 bucket and give access to single instance)
+
+-- TODO NOW S3 bucket creation/addition
+
+-- TODO redis cluster (either ElastiCache or EC2+NixOS)
+
+-- TODO RDS instance + user + database
+
+-- TODO setup custom VPC with private subnet?
+
+-- TODO test AWS SNS?
+
+-- TODO NOW extend Docker/NixOS/EC2 to build a static set of containers
+-- Push results to ECS (for now)
+-- Extend testDocker to also install Packer+Terraform, build images, and push to ECS
+--      pkgs.packer
+--      pkgs.terraform
+
+-- TODO Gitlab + Pipeline that builds docker images (isolated from Internet to assure pure functin of commit)
+--  + orchestration in k8s/EKS or Nomad/NixOS/EC2
+
+
+-- TODO get TF to boot EKS cluster and run standard containers in there (e.g. consul cluster)
+
+-- TODO NixOS machine with docker + standard consul image
+-- E.g. as above, then run:
+-- 		docker pull consul
+-- 		docker run -t -i consul agent -bootstrap-expect=1 -server
+
+
+-- TODO build custom Docker images using NixOS (preferably driven by expressions, similar to our NixOS provisioning)
+--   See: https://nixos.wiki/wiki/Docker
+
+-- TODO Consul cluster based on Docker+Kubernetes?
+-- TODO more generally: config/launch containers in EKS, or functions in Lambda as an alternative to NixOS/EC2
+
+-- TODO use packer to build AMIs/Docker containers
+
+-- TODO [NOTE pinNixPkgs] pin nixpkgs on the machines/AMI?
+-- See:
+--    http://www.haskellforall.com/2018/08/nixos-in-production.html
+
+-- TODO configurable EC2 instance type/size
+
+-- TODO something like
+--    https://itnext.io/building-a-kubernetes-hybrid-cloud-with-terraform-fe15164b35fb
+
+
+--
+-- TODO simple test suite
+-- Should take
+--    [{norosExpr:Text,expectedEndpoint:Text,timeout:Natural}]
+-- deploys a bunch of expressions in sequence and verifies the
+-- given URL comes up within the given time.
+-- Note some 'test' fields sketched above.
+
+
+-- TODO remove all 'in' and use formatter!

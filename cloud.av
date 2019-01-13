@@ -10,6 +10,9 @@ let
 Functor = ./vendor/dhall-bhat/Functor/Type
 in
 let
+List_functor = ./vendor/dhall-bhat/List/functor
+in
+let
 Applicative = ./vendor/dhall-bhat/Applicative/Type
 in
 let
@@ -292,10 +295,13 @@ in
 --    {foo = "fooAttr", bar = "barAttr"}
 --
 -- TODO later
--- Because Text is not inspectable in Dhall, we can currently only parse Text attribtutes
--- Workaround: Accept a type of dynamic inputs: <Text|Natural...>
+-- Because Text is not inspectable in Dhall, the evaluator must
+-- convert Terraform text to suitable types
 let
-AttrF = \(a:Type) -> {attrName:Text,attrParse:Text -> a}
+PrimAttr = <N:Natural | T:Text>
+in
+let
+AttrF = \(a:Type) -> {attrName:Text,attrParse:List PrimAttr -> Optional a}
 in
 
 let
@@ -330,12 +336,22 @@ let
 id = \(a:Type) -> \(x:a) -> x
 in
 let
-some = \(a:Type) -> \(x:a) -> Some x
+someT
+  : PrimAttr -> Optional Text
+  = \(x:PrimAttr) ->
+  merge
+    { T = \(x:Text) -> Some x
+    , N = \(x:Natural) -> (None Text)
+    }
+    x
 in
 let
 -- See NOTE [Safe attributes]
 unsafeTextAttr = \(name:Text) ->
-  liftFreeAp AttrF Text {attrName=name,attrParse = id Text}
+  liftFreeAp AttrF Text
+    { attrName = name
+    , attrParse = \(x:List PrimAttr) -> None Text -- FIXME
+    }
 in
 let
 someAttr
@@ -523,11 +539,15 @@ in
  -
  -}
 
+
+
 [ AwsResources.AwsInstance
   { name = "x"
   , staticFiles = noFiles
   , config =
-    	liftA2Attr Text Text NodeConf toNix2 someAttr someAttr
+    	liftA2Attr Text Text NodeConf toNix2
+        someAttr
+        ((FreeAp_applicative AttrF).pure Text "haha")
   }
 ]
 

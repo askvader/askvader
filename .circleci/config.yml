@@ -1,18 +1,3 @@
-# dependencies:
-#   cache_directories:
-#     - "~/.stack"
-#   pre:
-#     - wget https://www.stackage.org/stack/linux-x86_64-static -O /tmp/stack.gz
-#     - gunzip /tmp/stack.gz && chmod +x /tmp/stack
-#     - sudo mv /tmp/stack /usr/bin/stack
-#   override:
-#     - stack setup
-#     - stack build
-#
-# test:
-#   override:
-#     - stack test
-
 version: 2
 jobs:
   build:
@@ -20,43 +5,6 @@ jobs:
       - image: nixos/nix # TODO pin tag 2.0 of this image (e.g. NixOS 18.03)
         environment:
           LC_ALL: C.UTF-8
-        # - image: ubuntu:16.04
-      # - image: tutum/curl
-      # - image: samdoshi/haskell-stack
     steps:
       - checkout
-      # - run: wget https://www.stackage.org/stack/linux-x86_64-static -O /tmp/stack.gz
-      # - run: gunzip /tmp/stack.gz && chmod +x /tmp/stack
-      # - run: sudo mv /tmp/stack /usr/bin/stack
-      # - run: yes | sudo pacman -Syy make
-      # yes | pacman -Syy tar
-      # yes | pacman -Syy unzip
-      # yes | pacman -Syy patch
-
-
-      # Use packam to boot up an env in which we can install Nix and nixpkgs
-      # - run: yes | apt-get update
-      # - run: yes | apt-get install tar || echo
-        # unzip patch
-      # - run: sudo mkdir -p /nix
-      # - run: sudo chmod a+rwx /nix
-      # echo "build-users-group =" > /etc/nix/nix.conf
-
-      # TODO if root only
-      # (groupadd nixbld || true) ; usermod -a -G nixbld root
-      # (adduser foobar || true)
-      # (usermod -G nixbld foobar || true)
-
-      #   - run: curl https://nixos.org/releases/nix/nix-2.0/nix-2.0-x86_64-linux.tar.bz2 > nix.tar.bz2
-      #   - run: tar -xvf nix.tar.bz2
-      #   - run: pwd
-      #   - run: ls -lah
-      #   - run: USER=hans ./nix-2.0-x86_64-linux/install
-
-
-      # Run
-      - run: nix-shell --pure --command "cabal run"
-
-      # - run: curl -sSL https://get.haskellstack.org/ | sh
-      # - run: stack setup
-      # - run: stack test
+      - run: nix-shell --pure --command "bin/check"

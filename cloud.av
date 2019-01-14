@@ -719,7 +719,7 @@ let awsInstanceToInput
           ${pre}
           data "external" "${name}-eval" {
             program =
-              [ "./eval"
+              [ "./bin/eval"
               // Pass code as first argument
               , <<EOF
     ''

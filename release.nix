@@ -20,7 +20,14 @@ let
 in
 
 pkgs.stdenv.mkDerivation {
-  name = "blog";
+  name = "askvader";
+  src = ./.;
+  phases = ["installPhase"];
+  installPhase =
+    ''
+    echo Please use nix-shell for now!
+    touch $out
+    '';
   buildInputs = [
     pkgs.nixops
     pkgs.terraform

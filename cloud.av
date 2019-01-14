@@ -714,18 +714,19 @@ let awsInstanceToInput
       ''
     in
 
+    -- Pass code as first argument
+    -- TODO chose a random limit string?
     { tfCodeBefore =
     ''
           ${pre}
           data "external" "${name}-eval" {
             program =
               [ "./bin/eval"
-              // Pass code as first argument
-              , <<EOF
+              , <<END_AHJSHDJALKASJDHKJHVHJHEJKBAB
     ''
     , tfCodeAfter =
     ''
-              EOF
+              END_AHJSHDJALKASJDHKJHVHJHEJKBAB
               ${attrBlock}
               ]
             query =

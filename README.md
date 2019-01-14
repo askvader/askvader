@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/haskell/ghcup.svg?branch=master)](https://travis-ci.org/haskell/ghcup)
-[![license](https://img.shields.io/github/license/haskell/ghcup.svg)](COPYING.md)
+[![CircleCI](https://circleci.com/gh/askvader/askvader.svg?style=svg)](https://circleci.com/gh/askvader/askvader)
+[![license](https://img.shields.io/github/license/askvader/askvader.svg)](COPYING.md)
 
 <img alt="Noros" src="https://dl.dropboxusercontent.com/s/xrw0wxu7imjsvgt/askvader_sm.png" width="190" align="left">
 

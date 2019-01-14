@@ -873,6 +873,7 @@ map AwsInstanceR EvaluatorInput awsInstanceToInput
 --    https://itnext.io/building-a-kubernetes-hybrid-cloud-with-terraform-fe15164b35fb
 
 
+-- TODO Publish!
 --
 -- TODO simple test suite
 -- Should take

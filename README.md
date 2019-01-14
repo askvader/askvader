@@ -7,4 +7,4 @@
 
 Askvader is an experimental functional language, which provisions cloud resources as part of its evaluation model.
 
-It is implemented on top of [Terraform](), [Packer]() and [Nix](). The core language is based on [Dhall]().
+It is implemented on top of [Terraform](https://www.terraform.io), [Packer](https://www.packer.io) and [Nix](https://nixos.org/nix/). The core language is based on [Dhall](https://dhall-lang.org/).

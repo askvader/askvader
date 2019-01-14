@@ -124,8 +124,17 @@ standardAwsOptions =
   , rootBlockDeviceVolumeSize = 30 -- TODO too big?
   }
 
-
-
+-- Standard NixOS preamble
+-- Hardcoded for now
+let nixPre =
+  ''
+  { config, pkgs, ... }:
+  {
+    imports = [ <nixpkgs/nixos/modules/virtualisation/amazon-image.nix> ];
+    ec2.hvm = true;
+  }
+  //
+  ''
 
 
 
@@ -295,9 +304,9 @@ let
 AttrF = \(a:Type) -> {attrName:Text, attrParse:PrimAttr -> Optional a}
 
 let
-toNix = \(x:Text) -> { nixExpr = x }
+toNix = \(x:Text) -> { nixExpr = nixPre ++ x }
 let
-toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = x ++ " " ++ y }
+toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = nixPre ++ x ++ " " ++ y }
 let
 toNixShow = \(x:Natural) -> toNix (Natural/show x)
 let
@@ -790,8 +799,9 @@ map AwsInstanceR EvaluatorInput awsInstanceToInput
   , config =
     	liftA2Attr Text Text NodeConf toNix2
         --someAttr
-        (pureAttr Text "y")
-        (mapAttr Natural Text Natural/show someNatAttr)
+        (pureAttr Text "")
+        (pureAttr Text "{ virtualisation.docker.enable = true; }")
+        --(mapAttr Natural Text Natural/show someNatAttr)
   }
 ]
 
@@ -871,7 +881,6 @@ map AwsInstanceR EvaluatorInput awsInstanceToInput
 -- given URL comes up within the given time.
 -- Note some 'test' fields sketched above.
 
--- TODO make Attr parser actually work
+-- TODO make Attr parser actually send values from splices
 -- TODO restore S3/etc
 -- TODO restore examples, flip to master
--- TODO restore NixOS preamble-

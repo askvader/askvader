@@ -1,1 +1,1 @@
-./run $* && terraform apply -auto-approve
+./bin/run $* && terraform apply -auto-approve

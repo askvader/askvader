@@ -40,7 +40,7 @@ main = do
   let cont = args !! 1
   let params = tail $ tail args
   -- TODO generate these from params based on types
-  let dhallParams = "([ <N=554433|T:Text>, <N:Natural|T=\"foo\">])"
+  let dhallParams = Text.unpack $ toPrimAttrs $ zip (parsePrimAttrTypes types) (fmap Text.pack params)  -- "([ <N=554433|T:Text>, <N:Natural|T=\"foo\">])"
   let fullCode = "(" ++ cont ++ ")" ++ dhallParams
 
   -- TODO improve error message if we fail here

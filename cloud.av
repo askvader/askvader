@@ -914,6 +914,7 @@ catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToIn
 -- 		docker pull consul
 -- 		docker run -t -i consul agent -bootstrap-expect=1 -server
 
+-- TODO use free category (final encoding) to pass chain of pure functions (e.g. for log pipelines)
 
 -- TODO build custom Docker images using NixOS (preferably driven by expressions, similar to our NixOS provisioning)
 --   See: https://nixos.wiki/wiki/Docker
@@ -935,8 +936,12 @@ catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToIn
 -- TODO instead of using Free, could the user just write a function of the type and dictionary?
 -- E.g. the framework provides the Applicative/whatever.
 
--- TODO use free category (final encoding) to pass chain of pure functions (e.g. for log pipelines)
-
+-- TODO break up cloud.av/better interface
+--    * Break up cloud.av into "one file per let" convention
+--    * Make sure all comments are on top of file, and we can run the formatter :)
+--        https://github.com/dhall-lang/dhall-haskell/issues/145
+--    * The user CLI should take a single expression (any .av file in CWD, balking if >1) by default
+--    * Use lambda abstraction to hide internals: see [Evaluator Protocol] and [Safe attributes]
 
 -- TODO simple test suite
 -- Should take
@@ -947,6 +952,4 @@ catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToIn
 --   Should allow CIs to run exactly the tests they have credentials for.
 -- Note some 'test' fields sketched above.
 
--- TODO make Attr parser actually send values from splices
 -- TODO restore S3/etc
--- TODO restore examples, flip to master

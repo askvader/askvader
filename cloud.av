@@ -812,13 +812,8 @@ let resourceToInput
   = \(x : AwsResource) ->
   merge
     { AwsInstance = \(x : AwsInstanceR) -> Some (awsInstanceToInput x)
-    -- TODO FIXME
-    --
-    -- * Extend Evaluator protocol to pass along type info to bin/eval, so that it can
-    --   generate proper Dhall to pass into continuations
-    -- * Make sure eval correctly parses attrs of various types (Natural and Text at least!)
-    -- * Make sure the example above generates a random int/string when erasing tfstate files
-    -- * Make test suite for this
+    -- TODO
+    -- * Make test suite for RandomInteger, RandomString
     , RandomInteger = \(x : RandomIntegerR) -> Some (staticInput
       ''
     	resource "random_integer" "${x.name}" {

@@ -16,7 +16,7 @@ import Dhall hiding (string)
 data AttrType = NaturalT | TextT
   deriving (Show)
 
--- Parses a string like "Natural,Text"
+-- Parses a string like "Natural, Text"
 parsePrimAttrTypes :: String -> [AttrType]
 parsePrimAttrTypes = last . fmap fst . readP_to_S parser
   where
@@ -50,15 +50,10 @@ main = do
   --  * Text us passed as unquoted strings, e.g. a possible value for (fmap (!! 1) getArgs) is "h#@sj"
 
   let types = args !! 0
-  -- TODO pass a string like "Natural, Text" etc
   let cont = args !! 1
   let params = tail $ tail args
-  -- TODO generate these from params based on types
-  -- putStrLn $ "DEBUG" ++ (show $ parsePrimAttrTypes types)
   let dhallParams = Text.unpack $ toPrimAttrs $ zip (parsePrimAttrTypes types) (fmap Text.pack params)  -- "([ <N=554433|T:Text>, <N:Natural|T=\"foo\">])"
   let fullCode = "(" ++ cont ++ ")" ++ dhallParams
-  -- putStrLn $ "DEBUG" ++ fullCode
-  -- TODO improve error message if we fail here
   dhallExpr <- Text.pack <$> readProcess "dhall" ["normalize"] fullCode
 
   -- NOTE

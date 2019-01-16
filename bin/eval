@@ -6,20 +6,34 @@ import System.Environment
 import System.Process
 import Data.List (intercalate)
 import qualified Data.Text as Text
+import Text.ParserCombinators.ReadP
+import Control.Applicative
 
-import Dhall
+import Dhall hiding (string)
 
 -- | Subset of Dhall types this evaluator can receive for its arguments.
 -- See [Evaluator Protocol] and [PrimAttrs].
 data AttrType = NaturalT | TextT
+  deriving (Show)
 
--- Parses a string like "Natural, Text"
+-- Parses a string like "Natural,Text"
 parsePrimAttrTypes :: String -> [AttrType]
-parsePrimAttrTypes = undefined
+parsePrimAttrTypes = last . fmap fst . readP_to_S parser
+  where
+    parser :: ReadP [AttrType]
+    parser = attr `sepBy1` (char ',' >> skipSpaces)
+
+    attr :: ReadP AttrType
+    attr = foldr (<|>) empty [string "Natural" >> pure NaturalT, string "Text" >> pure TextT]
 
 -- | Convert a list of raw arguments (Terraform output) to a Dhall expressions of type (List PrimAttr). See [PrimsAttrs].
 toPrimAttrs :: [(AttrType, Text)] -> Text
-toPrimAttrs = undefined
+toPrimAttrs xs = "[" <> Text.intercalate "," (fmap f xs) <> "]"
+  where
+    f :: (AttrType, Text) -> Text
+    f (NaturalT, x) = "<T:Text|N="<>x<>">"
+    f (TextT, x)    = "<T="<>showt x<>"|N:Natural>"
+    showt = Text.pack . show
 
 main = do
   args <- getArgs
@@ -40,9 +54,10 @@ main = do
   let cont = args !! 1
   let params = tail $ tail args
   -- TODO generate these from params based on types
+  -- putStrLn $ "DEBUG" ++ (show $ parsePrimAttrTypes types)
   let dhallParams = Text.unpack $ toPrimAttrs $ zip (parsePrimAttrTypes types) (fmap Text.pack params)  -- "([ <N=554433|T:Text>, <N:Natural|T=\"foo\">])"
   let fullCode = "(" ++ cont ++ ")" ++ dhallParams
-
+  -- putStrLn $ "DEBUG" ++ fullCode
   -- TODO improve error message if we fail here
   dhallExpr <- Text.pack <$> readProcess "dhall" ["normalize"] fullCode
 

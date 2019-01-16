@@ -19,6 +19,16 @@ main = do
 
   writeFile "DEBUG" (show $ tail args1)
   -- TODO FIXME figure out how to parse real input and plug in...
+
+  -- NOTE [Parsing Terraform inputs]
+  -- It is not well documented how Terraform passes splice results to an external_resource.
+  -- We'll find out as we go along and put the observations here.
+  --
+  -- Observations:
+  --  * Numbers are passed as strings, e.g. a possible value for (fmap (!! 1) getArgs) is "2"
+  --  * Text us passed as unquoted strings, e.g. a possible value for (fmap (!! 1) getArgs) is "h#@sj"
+
+  -- TODO pass numbers and text correcty
   let fullCode = "(" ++ head args1 ++ ")([<N=554433 | T:Text>])"
 
   -- TODO improve error message if we fail here

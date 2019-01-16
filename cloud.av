@@ -412,6 +412,11 @@ let RandomIntegerR =
   , seed : Optional Natural
   }
 
+let RandomStringR =
+  { name : Text
+  , length : Natural
+  }
+
 let
 AwsResource =
   < AwsInstance : AwsInstanceR
@@ -427,6 +432,7 @@ AwsResource =
   -- NOTE [Source vs Data] We're not distinguishing resource/data_source a la Terraform
   -- Convention is: All TF data sources are suffixed with 'Data'
   | RandomInteger : RandomIntegerR
+  | RandomString : RandomStringR
   >
 
 let
@@ -770,12 +776,10 @@ let resourceToInput
     { AwsInstance = \(x : AwsInstanceR) -> Some (awsInstanceToInput x)
     -- TODO FIXME
     --
-    -- * extend eval protocol to allow "static" resources (e.g. resources
-    -- with no dependencies)
-    -- * Make sure bin/run can handle it
-    -- * Make RandomIntegerR emit such a resource
+    -- * Extend Evaluator protocol to pass along type info to bin/eval, so that it can
+    --   generate proper Dhall to pass into continuations
     -- * Make sure eval correctly parses attrs of various types (Natural and Text at least!)
-    -- * Make sure the example above generates a random int
+    -- * Make sure the example above generates a random int/string when erasing tfstate files
     -- * Make test suite for this
     , RandomInteger = \(x : RandomIntegerR) -> Some (staticInput
       ''
@@ -783,6 +787,12 @@ let resourceToInput
         min     = ${Natural/show x.min}
         max     = ${Natural/show x.max}
 				${Optional/fold Natural x.seed Text (Natural/show) ""}
+			}
+      '')
+    , RandomString = \(x : RandomStringR) -> Some (staticInput
+      ''
+    	resource "random_string" "${x.name}" {
+        length     = ${Natural/show x.length}
 			}
       '')
     -- TODO...
@@ -804,18 +814,19 @@ in
 catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToInput
 
 [ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }
+, AwsResource.RandomString { name = "bar", length = 5 }
 , AwsResource.AwsInstance
     { name = "x"
     , staticFiles = noFiles
     , config =
       let
         mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ foo = " ++ Natural/show x ++
-        "; virtualisation.docker.enable = true; }" ++ y }
+        "; bar = " ++ y ++ "; virtualisation.docker.enable = true; }" ++ y }
       in
         liftA2Attr Natural Text NodeConf mkConf
           --someAttr
           (unsafeNatAttr "random_integer.foo.result")
-          (pureAttr Text "")
+          (unsafeTextAttr "random_string.bar.result")
           --(mapAttr Natural Text Natural/show someNatAttr)
     }
 ]

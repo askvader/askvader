@@ -38,9 +38,6 @@ toPrimAttrs xs = "[" <> Text.intercalate "," (fmap f xs) <> "]"
 main = do
   args <- getArgs
 
-  writeFile "DEBUG" (show $ tail $ tail $ args)
-  appendFile "DEBUG" (show $ head args)
-
   -- NOTE [Parsing Terraform inputs]
   -- It is not well documented how Terraform passes splice results to an external_resource.
   -- We'll find out as we go along and put the observations here.

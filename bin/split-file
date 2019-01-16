@@ -1,0 +1,44 @@
+#!/usr/bin/env runghc
+-- vi:syntax=haskell
+{-# LANGUAGE OverloadedStrings #-}
+
+{- Utility for splitting big .av files containing let-expressions.
+
+  split-file x.av dir/
+
+will split the file x.av and place results in dir/, thus:
+
+- File is split after each \n that is the END of the last line containing code (e.g. not just WS or comments)
+  immediately preceding a line starting with 'let'.
+- The binding "let foo : T = E" places "let foo : T = E in foo" in the output file "foo.av"
+- Each file is prepended by one let-line for each preceding definition
+- Two output files including the whole package 'package' and 'Types' is generated for upper- and lowercase definitions respectively
+
+    let X = Natural
+    let foo = 1 : X
+    -- About bar
+    let bar = foo + 1
+    in bar
+
+becomes
+
+./X
+let X = Natural in X
+
+./foo
+let X = ./X
+let foo = 1 : X in foo
+
+./bar
+let X = ./X
+let foo = ./foo
+-- About bar
+let bar = foo + 1 in bar
+
+./package
+in { foo = ./foo, bar = ./bar }
+
+./Types
+let X = ./X
+in { X = ./X }
+-}

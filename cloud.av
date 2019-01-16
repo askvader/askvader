@@ -461,107 +461,52 @@ let
 noFiles = [] : List {content:Text,path:Text}
 
 
-{- TODO
- - Write a new evaluator (in Haskell?) that extracts config code and
- -  * Extracts functions of TF-generated attributes, writes them to eval fake-resources (as before)
- -  * Generates top level TF (by looking at the attrName in the free ap/coyoneda)
- -  * Invokes TF
- - Basically this is simple:
- - Given an AwsInstanceR r, we can extract the attribute and a parsing function using
- -
-		⊢ r.config Text ( \(c:Type) ->
-				\(conv:c -> {nixExpr:Text}) ->
-						\(attrF: AttrF c) -> attrF.attrName )
-		⊢ \(res:Text) ->
-				r.config {nixExpr:Text}
-							( \(c:Type)
-									-> \(conv:c -> NodeConf)
-									-> \(attrF: AttrF c)
-									-> conv (attrF.attrParse res) )
- -
- - We could write a function in Dhall (or in Haskell, expr -> expr) that replaces all resources
- - with a pair
- -    { attrName : Text, attrCont : DynVal|Text -> NodeConf, tfDecls : Text }
- - Render the above as a single TF file (this is impossible in Dhall!)
- -
- -
- - NOTE currently NodeConf is Text, so the above also works with virtualization (e.g. for AMI/Docker,
- - create a packer script starting from a base image and provisioning with the Nix expression).
- - If NodeConf is changed to a *function*, the evaluator will use some Dhall backend to convert
- - this to a runnable image. This could work in several ways:
- -    Blob -> Blob                 Become a (pure) web server
- -    Blob -> State Blob Blob      Become a web server with (transient) state, backed by its own harddrive
- -    Blob -> NodeConf             Wait for a web request, then *become* the given config
- -    Blob -> Map Text NodeConf    Wait for a web request, then *launch new nodes* with the given config
- -    A -> B                       Become a processor in a typed channel
- -
- -
- - TODO LATER special resources for cached provisions (AMIs/containers)
- - AMI-based, implemented by running packer on host machine:
- -  * Resource a la AwsInstance that builds the NodeConf to an AMI and returns registered AMI
- -  * Resource a la AwsInstance that takes such an AMI instead of a NodeConf
- -
- -
- -
- - Implementation
- -   Make name depend of TF config (including Nix expr) - reuse if exists in AWS account
- -   Use external data source to call packer (with HS wrapper?)
- -     Generates suitable JSON for packer and calls this
- -       https://www.packer.io/docs/builders/amazon-ebs.html
- -   Provide output attribute with the new AMI name
- -   Provide this as an alternative input to AwsInstance
+--
+-- NOTE currently NodeConf is Text, so the above also works with virtualization (e.g. for AMI/Docker,
+-- create a packer script starting from a base image and provisioning with the Nix expression).
+-- If NodeConf is changed to a *function*, the evaluator will use some Dhall backend to convert
+-- this to a runnable image. This could work in several ways:
+--    Blob -> Blob                 Become a (pure) web server
+--    Blob -> State Blob Blob      Become a web server with (transient) state, backed by its own harddrive
+--    Blob -> NodeConf             Wait for a web request, then *become* the given config
+--    Blob -> Map Text NodeConf    Wait for a web request, then *launch new nodes* with the given config
+--    A -> B                       Become a processor in a typed channel
+--
+--
+-- TODO LATER special resources for cached provisions (AMIs/containers)
+-- AMI-based, implemented by running packer on host machine:
+--  * Resource a la AwsInstance that builds the NodeConf to an AMI and returns registered AMI
+--  * Resource a la AwsInstance that takes such an AMI instead of a NodeConf
+--
+--
+--
+-- Implementation
+--   Make name depend of TF config (including Nix expr) - reuse if exists in AWS account
+--   Use external data source to call packer (with HS wrapper?)
+--     Generates suitable JSON for packer and calls this
+--       https://www.packer.io/docs/builders/amazon-ebs.html
+--   Provide output attribute with the new AMI name
+--   Provide this as an alternative input to AwsInstance
 
- - Docker-based, implemented by running docker+packer on a special instance:
- -  * Resource a la AwsInstance that builds a NodeConf to a Docker container placed in ECR
- -  * Resource that launches containers in EKS
- -
- -
- -
- -
- -
- - TODO LATER
- -    Provision a function (e.g. Text -> Text).
- -
- -    Provision a node with config (e.g. A -> NodeConf)
- -
- -
- -
- - TODO LATER
- -
- - Break recursive dependency between attrs/resources (using limited fixpoints?) to define safe
- - mappings between resources/attrs (e.g. prevent looking up an attr of resource of type A from
- - resource of type B).
- -
- - Or use something like the NOTE [Safe attributes] approach, hiding the Attr constructors and
- - passing in a safe subset at the top level.
- -
- -}
+-- Docker-based, implemented by running docker+packer on a special instance:
+--  * Resource a la AwsInstance that builds a NodeConf to a Docker container placed in ECR
+--  * Resource that launches containers in EKS
+--
+--
+--
 
 
-{- TODO run the Attr parser!
- - Also run in Const to determine attr names
- -
- - > let readerToState  = (\(ReaderT f) -> StateT (\s -> Identity (runIdentity $ f (head s), (tail s)))) :: forall s x . Reader s x -> State [s] x
- - > runState (runAp readerToState (liftA2 (,) (liftAp (reader (read @Bool))) (liftAp (reader (read @Int))))) ["False","3","4"]
- -      ((False,3),["4"])
- -
- -  Use this to obtain the following at top-level
- -    [{ tfCodeBefore : Text
- -     , tfCodeAfter : Text
- -     , attrNames: [Text]
- -     , tfContinue: [PrimAttr] -> NodeConf
- -     }]
- -
- - Write simple Haskell program that recieves this,
- - generates TF files and runs it. Note the attrCont should be
- - normalized and written as a Dhall expression in the first
- - argument to the external_resource.
- -
- - Adapt 'eval' to compose recieved expressions, *normalize*,
- - then feed back to TF.
- -}
 
-
+--
+-- TODO
+--
+-- Break recursive dependency between attrs/resources (using limited fixpoints?) to define safe
+-- mappings between resources/attrs (e.g. prevent looking up an attr of resource of type A from
+-- resource of type B).
+--
+-- Or use something like the NOTE [Safe attributes] approach, hiding the Attr constructors and
+-- passing in a safe subset at the top level.
+ -
 
 
 
@@ -785,6 +730,10 @@ let awsInstanceToInput
     }
 
 let pureAttr = (FreeAp_applicative AttrF).pure
+
+let resourceToInput
+  : AwsResources -> EvaluatorInput
+  = \(x : AwsResources) ->
 
 
 in

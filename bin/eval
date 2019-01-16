@@ -2,9 +2,6 @@
 -- vi:syntax=haskell
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
--- TODO FIXME this should no longer generate NIX
--- It's main responsibility should be to convert [Text] to DynExpr (as Dhall can not parse Text)
-
 import System.Environment
 import System.Process
 import Data.List (intercalate)
@@ -13,12 +10,10 @@ import qualified Data.Text as Text
 import Dhall
 
 main = do
+  args <- getArgs
 
-  -- TODO support calling with N arguments...
-  args1 <- getArgs
-
-  writeFile "DEBUG" (show $ tail args1)
-  -- TODO FIXME figure out how to parse real input and plug in...
+  writeFile "DEBUG" (show $ tail $ tail $ args)
+  appendFile "DEBUG" (show $ head args)
 
   -- NOTE [Parsing Terraform inputs]
   -- It is not well documented how Terraform passes splice results to an external_resource.
@@ -28,8 +23,13 @@ main = do
   --  * Numbers are passed as strings, e.g. a possible value for (fmap (!! 1) getArgs) is "2"
   --  * Text us passed as unquoted strings, e.g. a possible value for (fmap (!! 1) getArgs) is "h#@sj"
 
-  -- TODO pass numbers and text correcty
-  let fullCode = "(" ++ head args1 ++ ")([<N=554433 | T:Text>])"
+  let types = args !! 0
+  -- TODO pass a string like "Natural, Text" etc
+  let cont = args !! 1
+  let params = tail $ tail args
+  -- TODO generate these from params based on types
+  let dhallParams = "([ <N=554433|T:Text>, <N:Natural|T=\"foo\">])"
+  let fullCode = "(" ++ cont ++ ")" ++ dhallParams
 
   -- TODO improve error message if we fail here
   dhallExpr <- Text.pack <$> readProcess "dhall" ["normalize"] fullCode
@@ -44,18 +44,3 @@ main = do
       -- Escape the nixExpr for JSON as per TF external resource protocol
       putStrLn $ "{\"nix\": " ++ show nixExpr ++ "}"
 
--- |
--- Some very unsafe escapes to insert arbitrary Dhall into the resulting Nix code.
---
--- Replaces
---    dhallEscapeSlash -> "/"
---    "dhallEscapeInline:X" -> X
---
--- TODO really implement the above behavior for dhallEscapeInline?
--- TODO come up with something safer
-dhallEscapes :: String -> String
-dhallEscapes =
-    Text.unpack
-  . Text.replace "{ dhallEscapePacker = {}; }" "pkgs.packer"
-  . Text.replace "dhallEscapeSlash" "\"/\""
-  . Text.pack

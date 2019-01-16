@@ -295,10 +295,18 @@ AwsInstanceConfig = Text
 --    (Const Text)
 --    {foo = "fooAttr", bar = "barAttr"}
 --
+
 let
 PrimAttr = <N:Natural | T:Text>
+
+-- An attribute
+--  * attrName is a valid TF splice expression, e.g. foo.bar
+--  * attrType is one of the supported Dhall types, currently one of
+--    - Natural
+--    - Text
+--  * attrParse is a parser that extracts a Dhall value of type attrType
 let
-AttrF = \(a:Type) -> {attrName:Text, attrParse:PrimAttr -> Optional a}
+AttrF = \(a:Type) -> {attrName:Text, attrType:Text, attrParse:PrimAttr -> Optional a}
 
 let
 toNix = \(x:Text) -> { nixExpr = nixPre ++ x }
@@ -334,6 +342,7 @@ someT
 let unsafeTextAttr = \(name:Text) ->
   liftFreeAp AttrF Text
     { attrName = name
+    , attrType = "Text"
     , attrParse = \(x:PrimAttr) ->
       merge
         { T = \(x:Text) -> Some x
@@ -348,6 +357,7 @@ someAttr
 let unsafeNatAttr = \(name:Text) ->
   liftFreeAp AttrF Natural
     { attrName = name
+    , attrType = "Natural"
     , attrParse = \(x:PrimAttr) ->
       merge
         { N = \(x:Natural) -> Some x
@@ -615,11 +625,6 @@ let attrParserToState
         (None {val:a,state:List PrimAttr})
        )
 
-let attrParserToConst
-  : forall (a : Type) -> AttrF a -> Const (List Text) a
-  = \(a : T)
-    -> \(attr : AttrF a)
-    -> [attr.attrName]
 
 -- forall (g:TT) -> Applicative g -> (forall (x:T) -> f x -> g x) -> g a
 let runAttr
@@ -642,9 +647,32 @@ let runAttr
 let Text_monoid = { unit = "", op = \(x:Text) -> \(y:Text) -> x ++ y } : Monoid Text
 let List_monoid = ./vendor/dhall-bhat/List/monoid
 
+let getAttrTypes
+  : Attr NodeConf -> List Text
+  = let attrParserToConst
+    : forall (a : Type) -> AttrF a -> Const (List Text) a
+    = \(a : T)
+      -> \(attr : AttrF a)
+      -> [attr.attrType]
+  in
+  \(attr : Attr NodeConf) ->
+    let r
+      : Const (List Text) NodeConf
+      = attr
+        (Const (List Text))
+        (Const_applicative (List Text) (List_monoid Text))
+        attrParserToConst
+    in r
+
 let getAttrNames
   : Attr NodeConf -> List Text
-  = \(attr : Attr NodeConf) ->
+  = let attrParserToConst
+    : forall (a : Type) -> AttrF a -> Const (List Text) a
+    = \(a : T)
+      -> \(attr : AttrF a)
+      -> [attr.attrName]
+  in
+  \(attr : Attr NodeConf) ->
     let r
       : Const (List Text) NodeConf
       = attr
@@ -663,9 +691,13 @@ let awsInstanceToInput
     let staticFileBlock = ""
     -- TODO FIXME unescaped attr names may cause problems
     let wrapAttr = \(x : Text) -> "\"\${" ++ x ++ "}\""
+    let attrTypeBlock =
+      ''
+      "${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text (id Text) (getAttrTypes instance.config)}"
+      ''
     let attrBlock =
       ''
-      , ${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
+      ${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
       ''
     -- TODO should be at top level
     let pre =
@@ -692,12 +724,13 @@ let awsInstanceToInput
           data "external" "${name}-eval" {
             program =
               [ "./bin/eval"
+              , ${attrTypeBlock}
               , <<END_AHJSHDJALKASJDHKJHVHJHEJKBAB
     ''
     , tfCodeAfter =
     ''
               END_AHJSHDJALKASJDHKJHVHJHEJKBAB
-              ${attrBlock}
+              , ${attrBlock}
               ]
             query =
               {
@@ -820,8 +853,8 @@ catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToIn
     , staticFiles = noFiles
     , config =
       let
-        mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ foo = " ++ Natural/show x ++
-        "; bar = " ++ y ++ "; virtualisation.docker.enable = true; }" ++ y }
+        mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ # foo = " ++ Natural/show x ++
+        "; bar = " ++ y ++ "; \n virtualisation.docker.enable = true; }" }
       in
         liftA2Attr Natural Text NodeConf mkConf
           --someAttr

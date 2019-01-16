@@ -1,2 +1,4 @@
 tmp*
 result
+.terraform
+*.tfstate

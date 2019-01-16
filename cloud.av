@@ -838,32 +838,35 @@ let resourceToInput
     }
     x
 
+
 in
 
 
 -- Examples
 
--- TODO handle all AwsResources
-catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToInput
+{ run
+  = \(x : List AwsResource) ->
+    catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToInput x)
+, test =
 
-[ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }
-, AwsResource.RandomString { name = "bar", length = 5 }
-, AwsResource.AwsInstance
-    { name = "x"
-    , staticFiles = noFiles
-    , config =
-      let
-        mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ # foo = " ++ Natural/show x ++
-        "; bar = " ++ y ++ "; \n virtualisation.docker.enable = true; }" }
-      in
-        liftA2Attr Natural Text NodeConf mkConf
-          --someAttr
-          (unsafeNatAttr "random_integer.foo.result")
-          (unsafeTextAttr "random_string.bar.result")
-          --(mapAttr Natural Text Natural/show someNatAttr)
-    }
-]
-)
+  [ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }
+  , AwsResource.RandomString { name = "bar", length = 5 }
+  , AwsResource.AwsInstance
+      { name = "x"
+      , staticFiles = noFiles
+      , config =
+        let
+          mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ # foo = " ++ Natural/show x ++
+          "; bar = " ++ y ++ "; \n virtualisation.docker.enable = true; }" }
+        in
+          liftA2Attr Natural Text NodeConf mkConf
+            --someAttr
+            (unsafeNatAttr "random_integer.foo.result")
+            (unsafeTextAttr "random_string.bar.result")
+            --(mapAttr Natural Text Natural/show someNatAttr)
+      }
+  ]
+}
 
 -- .attrNames
 -- .tfContinue ([PrimAttr.N 2] : List PrimAttr)

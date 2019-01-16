@@ -1,0 +1,4 @@
+
+let av = ./cloud.av
+in
+av.run ([] : List av.Resource)

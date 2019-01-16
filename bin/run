@@ -62,8 +62,12 @@ writeEI e
     = tfCodeBefore e <> tfCodeAfter e
 
 main = do
-  inp <- readFile "cloud.av"
   -- TODO other ways of providing the expression
+  args <- getArgs
+  let inputFile = case args of
+            [] -> "cloud.av"
+            (path:_) -> path
+  inp <- readFile inputFile
   inp1 <- readProcess "dhall" ["resolve"] inp
   inp2 <- readProcess "dhall" ["normalize"] inp1
   case exprFromText "input" $ Text.pack inp2 of

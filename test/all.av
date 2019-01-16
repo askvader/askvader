@@ -1,0 +1,34 @@
+
+
+-- Simple testing framework
+--
+-- Each test consists of
+--  - expression
+--    A valid Askvader expression
+--  - check
+--    An optional check to verify that the expression has been realised correctly.
+--  - timeout
+--    An optional upper bound on the time allowed to realise an expression.
+--
+-- To run all testsL
+--
+--    $ bin/run-tests
+--
+-- WARNING: If you run the tests with cloud credentials available in ~/.aws
+-- this may incur charges by your cloud provider.
+--
+let Check = < NoCheck : {} >
+let noCheck = Check.NoCheck {=}
+let Duration = { seconds : Natural }
+let seconds
+  : Natural -> Duration
+  = \(x : Natural) -> { seconds = x }
+let minutes
+  : Natural -> Duration
+  = \(x : Natural) -> { seconds = x * 60 }
+
+let Test =  { expression : Text, check : Check, timeout : Optional Duration }
+
+in
+[] : List Test
+

@@ -16,6 +16,8 @@ main = do
 
   -- TODO support calling with N arguments...
   args1 <- getArgs
+
+  writeFile "DEBUG" (show $ tail args1)
   -- TODO FIXME figure out how to parse real input and plug in...
   let fullCode = "(" ++ head args1 ++ ")([<N=554433 | T:Text>])"
 

@@ -647,16 +647,19 @@ let getAttrNames
         attrParserToConst
     in r
 
+let id = \(a : Type) -> \(x : a) -> x
+
 let awsInstanceToInput
   : AwsInstanceR -> EvaluatorInput
   = \(instance : AwsInstanceR) ->
-    -- TODO don't fake
     let name = instance.name
+    -- TODO allow static files again?
     let staticFileBlock = ""
-    -- FIXME
+    -- TODO FIXME unescaped attr names may cause problems
+    let wrapAttr = \(x : Text) -> "\"\${" ++ x ++ "}\""
     let attrBlock =
       ''
-      , "N 22"
+      , ${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
       ''
     -- TODO should be at top level
     let pre =

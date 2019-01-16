@@ -3,6 +3,8 @@
 -- Simple testing framework
 --
 -- Each test consists of
+--  - name
+--    Name of test (for error messages).
 --  - expression
 --    A valid Askvader expression
 --  - check
@@ -12,7 +14,7 @@
 --
 -- To run all testsL
 --
---    $ bin/run-tests
+--    $ test/run-tests
 --
 -- WARNING: If you run the tests with cloud credentials available in ~/.aws
 -- this may incur charges by your cloud provider.
@@ -27,8 +29,13 @@ let minutes
   : Natural -> Duration
   = \(x : Natural) -> { seconds = x * 60 }
 
-let Test =  { expression : Text, check : Check, timeout : Optional Duration }
+let Test =  { name : Text, expression : Text, check : Check, timeout : Optional Duration }
 
 in
-[] : List Test
+[ { name = "empty"
+  , expression = ./empty
+  , check = NoCheck
+  , timeout = None
+  }
+] : List Test
 

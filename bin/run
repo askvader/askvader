@@ -2,15 +2,6 @@
 -- vi:syntax=haskell
 {-# LANGUAGE OverloadedStrings #-}
 
--- TODO
--- Import expr as Dhall
--- Generate TF, inserting Dhall cont (normalized)
--- Invoke TF as per 'deploy'
-
--- TODO
--- Adapt 'run' to wrap in T/N and extract nixExpr (for now)
--- Make available to code as eval-result
-
 import System.Environment
 import System.Process
 import Data.List (intercalate)
@@ -71,7 +62,8 @@ writeEI e
     = tfCodeBefore e <> tfCodeAfter e
 
 main = do
-  inp <- readFile "cloud.av" -- TODO more options
+  inp <- readFile "cloud.av"
+  -- TODO other ways of providing the expression
   inp1 <- readProcess "dhall" ["resolve"] inp
   inp2 <- readProcess "dhall" ["normalize"] inp1
   case exprFromText "input" $ Text.pack inp2 of

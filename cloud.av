@@ -300,8 +300,6 @@ AttrF = \(a:Type) -> {attrName:Text, attrParse:PrimAttr -> Optional a}
 let
 toNix = \(x:Text) -> { nixExpr = nixPre ++ x }
 let
-toNix2 = \(x:Text) -> \(y:Text) -> { nixExpr = nixPre ++ x ++ " " ++ y }
-let
 toNixShow = \(x:Natural) -> toNix (Natural/show x)
 let
 Attr = FreeAp AttrF
@@ -404,6 +402,13 @@ AwsIAMPolicyR =
   { arn : Text
   }
 
+let RandomIntegerR =
+  { name : Text
+  , min : Natural -- Inclusive
+  , max: Natural -- Inclusive
+  , seed : Optional Natural
+  }
+
 let
 AwsResource =
   < AwsInstance : AwsInstanceR
@@ -414,6 +419,11 @@ AwsResource =
   | AwsIAMGroup : AwsIAMGroupR
   | AwsIAMRole : AwsIAMRoleR
   | AwsIAMPolicy : AwsIAMPolicyR
+
+  -- TODO not AWS resources, move to separate type...
+  -- NOTE [Source vs Data] We're not distinguishing resource/data_source a la Terraform
+  -- Convention is: All TF data sources are suffixed with 'Data'
+  | RandomInteger : RandomIntegerR
   >
 
 let
@@ -625,8 +635,9 @@ let awsInstanceToInput
   : AwsInstanceR -> EvaluatorInput
   = \(instance : AwsInstanceR) ->
     -- TODO don't fake
-    let name = "foo"
+    let name = instance.name
     let staticFileBlock = ""
+    -- FIXME
     let attrBlock =
       ''
       , "N 22"
@@ -738,6 +749,7 @@ let resourceToInput
   = \(x : AwsResource) ->
   merge
     { AwsInstance = \(x : AwsInstanceR) -> Some (awsInstanceToInput x)
+    , RandomInteger = \(x : RandomIntegerR) -> None EvaluatorInput
     -- TODO...
     , S3Bucket = \(x : S3BucketR) -> None EvaluatorInput
     , S3BucketObject = \(x : S3BucketObjectR) -> None EvaluatorInput
@@ -755,16 +767,21 @@ in
 
 -- TODO handle all AwsResources
 catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToInput
-[
-  AwsResource.AwsInstance { name = "x"
-  , staticFiles = noFiles
-  , config =
-    	liftA2Attr Text Text NodeConf toNix2
-        --someAttr
-        (pureAttr Text "")
-        (pureAttr Text "{ virtualisation.docker.enable = true; }")
-        --(mapAttr Natural Text Natural/show someNatAttr)
-  }
+
+[ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }
+, AwsResource.AwsInstance
+    { name = "x"
+    , staticFiles = noFiles
+    , config =
+      let
+        mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ foo = " ++ Natural/show x ++ "; virtualisation.docker.enable = true; }" ++ y }
+      in
+        liftA2Attr Natural Text NodeConf mkConf
+          --someAttr
+          (unsafeNatAttr "random_integer.foo.result")
+          (pureAttr Text "{ virtualisation.docker.enable = true; }")
+          --(mapAttr Natural Text Natural/show someNatAttr)
+    }
 ]
 )
 

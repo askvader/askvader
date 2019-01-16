@@ -873,14 +873,19 @@ map AwsInstanceR EvaluatorInput awsInstanceToInput
 -- TODO something like
 --    https://itnext.io/building-a-kubernetes-hybrid-cloud-with-terraform-fe15164b35fb
 
+-- TODO instead of using Free, could the user just write a function of the type and dictionary?
+-- E.g. the framework provides the Applicative/whatever.
 
--- TODO Publish!
---
+-- TODO use free category (final encoding) to pass chain of pure functions (e.g. for log pipelines)
+
+
 -- TODO simple test suite
 -- Should take
 --    [{norosExpr:Text,expectedEndpoint:Text,timeout:Natural}]
 -- deploys a bunch of expressions in sequence and verifies the
 -- given URL comes up within the given time.
+-- Arguably: Separate things that can be tested localy/on-cloud (e.g. requiring AWS creds or similar).
+--   Should allow CIs to run exactly the tests they have credentials for.
 -- Note some 'test' fields sketched above.
 
 -- TODO make Attr parser actually send values from splices

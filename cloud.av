@@ -104,6 +104,9 @@ standardProviders =
   provider "external" {
     version = "= 1.0.0"
   }
+  provider "random" {
+    version = "= 2.0.0"
+  }
   ''
 
 -- Standard AWS options
@@ -526,6 +529,15 @@ noFiles = [] : List {content:Text,path:Text}
 --  NixOS config, the node is created and provisioned with the given
 --  expression.
 --
+-- Static Inputs
+-- ===
+-- We allow 'static' inputs, e.g. inputs that have no dependencies in the TF
+-- resource graph. The Haskell evaluator treats any EvaluatorInput where attrNames = []
+-- as static. In this case the tfContinue value is ignored.
+--
+-- Abstraction & Interface
+-- ====
+--
 -- Anything involving the evaluator protocol should be hidden from the user.
 -- The main interface should be: user writes an expression of type (List
 -- AwsResource), (List KubernetesResource) and so on for each backend.
@@ -547,6 +559,10 @@ let EvaluatorInput =
    , attrNames: List Text
    , tfContinue: List PrimAttr -> Optional NodeConf
    }
+
+let staticInput
+  : Text -> EvaluatorInput
+  = \(x : Text) -> { tfCodeBefore = x, tfCodeAfter = "", attrNames = [] : List Text, tfContinue = \(x:List PrimAttr) -> None NodeConf }
 
 let Optional_monad = ./vendor/dhall-bhat/Optional/monad
 let Optional_functor = ./vendor/dhall-bhat/Optional/functor
@@ -758,7 +774,14 @@ let resourceToInput
     -- * Make sure eval correctly parses attrs of various types (Natural and Text at least!)
     -- * Make sure the example above generates a random int
     -- * Make test suite for this
-    , RandomInteger = \(x : RandomIntegerR) -> None EvaluatorInput
+    , RandomInteger = \(x : RandomIntegerR) -> Some (staticInput
+      ''
+    	resource "random_integer" "${x.name}" {
+        min     = ${Natural/show x.min}
+        max     = ${Natural/show x.max}
+				${Optional/fold Natural x.seed Text (Natural/show) ""}
+			}
+      '')
     -- TODO...
     , S3Bucket = \(x : S3BucketR) -> None EvaluatorInput
     , S3BucketObject = \(x : S3BucketObjectR) -> None EvaluatorInput

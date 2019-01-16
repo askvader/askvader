@@ -34,6 +34,9 @@ data EvalInput = EvalInput
   , tfContinue :: Expr X X
   }
 
+isStaticInput :: EvalInput -> Bool
+isStaticInput = null . attrNames
+
 parseInputs :: Expr X X -> IO [EvalInput]
 parseInputs x = case x of
   ListLit _ xs -> traverse parseInput $ toList xs
@@ -57,10 +60,15 @@ parseInput x = case x of
 
 writeTF :: [EvalInput] -> Text
 writeTF = mconcat . fmap writeEI
-  where
-  writeEI e = tfCodeBefore e
+
+writeEI :: EvalInput -> Text
+writeEI e
+  | not (isStaticInput e)
+    = tfCodeBefore e
     <> (Text.pack $ show $ prettyCharacterSet ASCII $ tfContinue e)
     <> tfCodeAfter e
+  | otherwise
+    = tfCodeBefore e <> tfCodeAfter e
 
 main = do
   inp <- readFile "cloud.av" -- TODO more options

@@ -296,6 +296,11 @@ AwsInstanceConfig = Text
 --    {foo = "fooAttr", bar = "barAttr"}
 --
 
+
+-- NOTE [PrimAttrs]
+-- A "unityped" set of Terraform return values.
+--
+-- This type is part of the [Evaluator Protocol], see that note.
 let
 PrimAttr = <N:Natural | T:Text>
 

@@ -739,15 +739,42 @@ let awsInstanceToInput
               {
               }
           }
-          // TODO do not duplicate the key pair block
+          // TODO do not duplicate the key pair/security group blocks
           resource "aws_key_pair" "${standardAwsOptions.keyName}" {
             key_name   = "${standardAwsOptions.keyName}"
             public_key = "''${file("~/.ssh/id_rsa.pub")}"
           }
+          resource "aws_security_group" "standard" {
+            name        = "standard"
+            description = "Allow inbound HTTP and SSH + all outbound"
+
+            ingress {
+              from_port   = 22
+              to_port     = 22
+              protocol    = "tcp"
+              cidr_blocks = ["0.0.0.0/0"]
+            }
+            ingress {
+              from_port   = 80
+              to_port     = 80
+              protocol    = "tcp"
+              cidr_blocks = ["0.0.0.0/0"]
+            }
+
+            egress {
+              from_port       = 0
+              to_port         = 0
+              protocol        = "-1"
+              cidr_blocks     = ["0.0.0.0/0"]
+              prefix_list_ids = ["pl-12c4e678"]
+            }
+          }
+
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
             instance_type		= "${standardAwsOptions.instanceType}"
             key_name        = "${standardAwsOptions.keyName}"
+            security_groups = ["standard"]
 
             tags {
               Name = "${name}"

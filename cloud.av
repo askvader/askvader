@@ -842,7 +842,9 @@ let resourceToInput
       -- TODO split up...
       -- TODO replace all count.index etc below with Dhall normalization...
       -- TODO instead of whitelisting access to API server below, fall back
-      --  on standard AV access rules (e.g. AWS/GCE credentials).
+      --  on standard AV access rules (e.g. AWS/GCE credentials). For dev/default
+      --  we can leave this open *assuming* Kubernetes TLS certificates is enough
+      --  to protect the API server (TODO check this!).
       ''
       data "aws_availability_zones" "available" {}
 

@@ -32,6 +32,7 @@ pkgs.stdenv.mkDerivation {
     pkgs.nixops
     pkgs.terraform
     pkgs.packer
+    pkgs.kubernetes
     pkgs.nix
     pkgs.fswatch
     pkgs.gmp

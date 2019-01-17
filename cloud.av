@@ -119,6 +119,8 @@ standardAwsOptions =
   { ami = "ami-0f412186fb8a0ec97"
 	, instanceType = "t2.micro"
   , keyName = "admin"
+  -- TODO update docs to verify id_rsa.pub does not work!
+  , publicKeyFile =
 	-- , instanceType = "t2.medium"
   -- instance_type   = "m5d.2xlarge"
 	-- , instanceType   = "t2.medium"
@@ -742,7 +744,7 @@ let awsInstanceToInput
           // TODO do not duplicate the key pair/security group blocks
           resource "aws_key_pair" "${standardAwsOptions.keyName}" {
             key_name   = "${standardAwsOptions.keyName}"
-            public_key = "''${file("~/.ssh/id_rsa.pub")}"
+            public_key = "''${file("${standardAwsOptions.publicKeyFile}")}"
           }
           resource "aws_security_group" "standard" {
             name        = "standard"
@@ -792,7 +794,7 @@ let awsInstanceToInput
               type = "ssh"
               user = "root"
               host = "''${element(aws_instance.${name}.*.public_ip, 0)}"
-              private_key = "''${file("~/.ssh/id_rsa")}"
+              private_key = "''${file("${standardAwsOptions.privateKeyFile}")}"
             }
             provisioner "file" {
               content = "''${data.external.${name}-eval.result.nix}"

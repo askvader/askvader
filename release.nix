@@ -69,5 +69,6 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
+    alias askvader=bin/askvader
   '';
 }

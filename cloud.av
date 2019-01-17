@@ -117,8 +117,8 @@ standardAwsOptions =
   -- Note that these are AZ/region-specific
   -- Nixos 18.09
   { ami = "ami-0f412186fb8a0ec97"
-  , keyName = "admin"
 	, instanceType = "t2.micro"
+  , keyName = "admin"
 	-- , instanceType = "t2.medium"
   -- instance_type   = "m5d.2xlarge"
 	-- , instanceType   = "t2.medium"
@@ -739,6 +739,11 @@ let awsInstanceToInput
               {
               }
           }
+          // TODO do not duplicate the key pair block
+          resource "aws_key_pair" "${standardAwsOptions.keyName}" {
+            key_name   = "${standardAwsOptions.keyName}"
+            public_key = "''${file("~/.ssh/id_rsa.pub")}"
+          }
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
             instance_type		= "${standardAwsOptions.instanceType}"
@@ -760,7 +765,7 @@ let awsInstanceToInput
               type = "ssh"
               user = "root"
               host = "''${element(aws_instance.${name}.*.public_ip, 0)}"
-              private_key = "''${file("~/.aws/${standardAwsOptions.keyName}.pem")}"
+              private_key = "''${file("~/.ssh/id_rsa")}"
             }
             provisioner "file" {
               content = "''${data.external.${name}-eval.result.nix}"
@@ -1037,13 +1042,13 @@ in
             (unsafeTextAttr "random_string.bar.result")
             --(mapAttr Natural Text Natural/show someNatAttr)
       }
-  , AwsResource.AwsEKSCluster
-    { name = "demo-cluster"
-    , roleArn = "TODO-DUMMY-NOT-USED"
-    , vpcConfig =
-      { subnetIds = ["TODO-DUMMY"]
-      }
-    }
+  -- , AwsResource.AwsEKSCluster
+  --   { name = "demo-cluster"
+  --   , roleArn = "TODO-DUMMY-NOT-USED"
+  --   , vpcConfig =
+  --     { subnetIds = ["TODO-DUMMY"]
+  --     }
+  --   }
   ]
 }
 

@@ -33,6 +33,7 @@ pkgs.stdenv.mkDerivation {
     pkgs.terraform
     pkgs.packer
     pkgs.kubernetes
+    pkgs.aws-iam-authenticator
     pkgs.nix
     pkgs.fswatch
     pkgs.gmp

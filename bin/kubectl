@@ -1,0 +1,4 @@
+# Use: askvader kubectl CLUSTER COMMANDS
+# Example: askvader kubectl mycluster get pods
+TMP=$(mktemp) && terraform output eks-clusters.$1>$TMP && KUBECONFIG=$TMP kubectl "${@:2}"
+

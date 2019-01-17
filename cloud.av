@@ -96,7 +96,7 @@ standardProviders =
   provider "aws" {
     region  = "eu-west-1"
     version = "= 1.54.0"
-    profile = "dev"
+    profile = "default"
   }
   provider "null" {
     version = "= 1.0"
@@ -1033,7 +1033,7 @@ users:
 KUBECONFIG
 }
 
-output "kubeconfig" {
+output "eks-clusters.fruktsallad" {
   value = "''${local.kubeconfig}"
 }
       ''

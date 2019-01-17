@@ -117,18 +117,11 @@ standardAwsOptions =
   -- Note that these are AZ/region-specific
   -- Nixos 18.09
   { ami = "ami-0f412186fb8a0ec97"
-	, instanceType = "t2.micro"
+  , instanceType = "t2.micro"
   , keyName = "admin"
-  -- TODO update docs to verify id_rsa.pub does not work!
   , publicKeyFile = "~/.ssh/id_rsa.pub"
   , privateKeyFile = "~/.ssh/id_rsa"
-	-- , instanceType = "t2.medium"
-  -- instance_type   = "m5d.2xlarge"
-	-- , instanceType   = "t2.medium"
-		-- instance_type = "i3.xlarge"
-    --
-  -- In GB
-  , rootBlockDeviceVolumeSize = 30 -- too big?
+  , rootBlockDeviceVolumeSize = { gigabytes = 30 }
   }
 
 -- Standard NixOS preamble
@@ -204,11 +197,11 @@ typeOf = \(x : AwsAttribute) ->
 
 let
 CannedACL =
-	< Private : {}
-	| PublicRead : {}
-	| PublicReadWrite : {}
-	-- TODO ...
-	>
+  < Private : {}
+  | PublicRead : {}
+  | PublicReadWrite : {}
+  -- TODO ...
+  >
 
 let
 VersioningOptions = { mfaDelete : Bool }
@@ -218,7 +211,7 @@ S3BucketR =
   { resourceName : Text
   , bucketName : Optional Text
   , acl : Optional CannedACL
-	, versioning : Optional VersioningOptions
+  , versioning : Optional VersioningOptions
   }
 
 let
@@ -287,9 +280,9 @@ AwsInstanceConfig = Text
 -- Full example
 --
 --    let
---    	Id = \(a : Type) → a
+--      Id = \(a : Type) → a
 --    in let
---    	Const = \(a : Type) → \(b : Type) → a
+--      Const = \(a : Type) → \(b : Type) → a
 --    in
 --
 --    (\(f:Type -> Type) ->
@@ -775,7 +768,7 @@ let awsInstanceToInput
 
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
-            instance_type		= "${standardAwsOptions.instanceType}"
+            instance_type   = "${standardAwsOptions.instanceType}"
             key_name        = "${standardAwsOptions.keyName}"
             security_groups = ["standard"]
 
@@ -784,7 +777,7 @@ let awsInstanceToInput
             }
 
             root_block_device {
-              volume_size = ${Natural/show standardAwsOptions.rootBlockDeviceVolumeSize}
+              volume_size = ${Natural/show standardAwsOptions.rootBlockDeviceVolumeSize.gigabytes}
             }
           }
           resource "null_resource" "${name}-prov" {
@@ -849,17 +842,17 @@ let resourceToInput
     -- * Make test suite for RandomInteger, RandomString
     , RandomInteger = \(x : RandomIntegerR) -> Some (staticInput
       ''
-    	resource "random_integer" "${x.name}" {
+      resource "random_integer" "${x.name}" {
         min     = ${Natural/show x.min}
         max     = ${Natural/show x.max}
-				${Optional/fold Natural x.seed Text (Natural/show) ""}
-			}
+        ${Optional/fold Natural x.seed Text (Natural/show) ""}
+      }
       '')
     , RandomString = \(x : RandomStringR) -> Some (staticInput
       ''
-    	resource "random_string" "${x.name}" {
+      resource "random_string" "${x.name}" {
         length     = ${Natural/show x.length}
-			}
+      }
       '')
 
     -- TODO...
@@ -1072,13 +1065,13 @@ in
             (unsafeTextAttr "random_string.bar.result")
             --(mapAttr Natural Text Natural/show someNatAttr)
       }
-  -- , AwsResource.AwsEKSCluster
-  --   { name = "demo-cluster"
-  --   , roleArn = "TODO-DUMMY-NOT-USED"
-  --   , vpcConfig =
-  --     { subnetIds = ["TODO-DUMMY"]
-  --     }
-  --   }
+  , AwsResource.AwsEKSCluster
+     { name = "demo-cluster"
+     , roleArn = "TODO-DUMMY-NOT-USED"
+     , vpcConfig =
+       { subnetIds = ["TODO-DUMMY"]
+       }
+     }
   ]
 }
 
@@ -1128,8 +1121,8 @@ in
 
 -- TODO NixOS machine with docker + standard consul image
 -- E.g. as above, then run:
--- 		docker pull consul
--- 		docker run -t -i consul agent -bootstrap-expect=1 -server
+--   docker pull consul
+--   docker run -t -i consul agent -bootstrap-expect=1 -server
 
 -- TODO use free category (final encoding) to pass chain of pure functions (e.g. for log pipelines)
 

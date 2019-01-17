@@ -704,28 +704,11 @@ let awsInstanceToInput
       ''
       ${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
       ''
-    -- TODO should be at top level
-    let pre =
-      ''
-					provider "aws" {
-						region  = "eu-west-2"
-						version = "= 1.54.0"
-						profile = "dev"
-					}
-					provider "null" {
-						version = "= 1.0"
-					}
-					provider "external" {
-						version = "= 1.0.0"
-					}
-      ''
     in
-
     -- Pass code as first argument
     -- TODO chose a random limit string?
     { tfCodeBefore =
     ''
-          ${pre}
           data "external" "${name}-eval" {
             program =
               [ "./bin/eval"
@@ -839,14 +822,17 @@ let resourceToInput
     x
 
 
+let foo = [1] # map Natural Natural (id Natural) [2]
 in
 
 
 -- Examples
 
 { run
-  = \(x : List AwsResource) ->
-    catMaybes EvaluatorInput (map AwsResource (Optional EvaluatorInput) resourceToInput x)
+  = \(xs : List AwsResource) ->
+    [staticInput standardProviders] # catMaybes EvaluatorInput
+      (map AwsResource (Optional EvaluatorInput)
+        resourceToInput xs)
 , test =
 
   [ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }

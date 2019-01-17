@@ -1,7 +1,7 @@
 ## Use
 
 ```shell
-askvader deploy my-expression.av
+askvader deploy main.av
 ```
 
 ## Credentials & Security

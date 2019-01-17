@@ -420,6 +420,18 @@ AwsIAMPolicyR =
   { arn : Text
   }
 
+let AwsSubnetR =
+  { vpcId : Text
+  , cidrBlock : Text
+  }
+-- TODO ID attr...
+
+let AwsEKSClusterR =
+  { name : Text
+  , roleArn : Text
+  , vpcConfig : { subnetIds : List Text }
+  }
+
 let RandomIntegerR =
   { name : Text
   , min : Natural -- Inclusive
@@ -442,6 +454,9 @@ AwsResource =
   | AwsIAMGroup : AwsIAMGroupR
   | AwsIAMRole : AwsIAMRoleR
   | AwsIAMPolicy : AwsIAMPolicyR
+
+  | AwsSubnet : AwsSubnetR
+  | AwsEKSCluster : AwsEKSClusterR
 
   -- TODO not AWS resources, move to separate type...
   -- NOTE [Source vs Data] We're not distinguishing resource/data_source a la Terraform
@@ -811,6 +826,7 @@ let resourceToInput
         length     = ${Natural/show x.length}
 			}
       '')
+
     -- TODO...
     , S3Bucket = \(x : S3BucketR) -> None EvaluatorInput
     , S3BucketObject = \(x : S3BucketObjectR) -> None EvaluatorInput
@@ -818,6 +834,9 @@ let resourceToInput
     , AwsIAMGroup = \(x : AwsIAMGroupR) -> None EvaluatorInput
     , AwsIAMRole = \(x : AwsIAMRoleR) -> None EvaluatorInput
     , AwsIAMPolicy = \(x : AwsIAMPolicyR) -> None EvaluatorInput
+
+    , AwsSubnet = \(x : AwsSubnetR) -> None EvaluatorInput
+    , AwsEKSCluster = \(x : AwsEKSClusterR) -> None EvaluatorInput
     }
     x
 

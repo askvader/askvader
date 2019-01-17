@@ -990,6 +990,12 @@ in
 , test =
 
   -- FIXME add key pair, using some RSA key from the system, generated in a standard way?
+  --  Alternatives:
+  --    * Automatic
+  --      - Let TF generate keys (using external provider?) and put keys in state
+  --      - Use S3/GCS backends with SS encryption (unless you're an individual)
+  --    * Manual
+  --      - Provide public key to TF in standard location (where?)
   -- FIXME set default sec group to allow all inbound on 80+22 (for now)
   [ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }
   , AwsResource.RandomString { name = "bar", length = 5 }

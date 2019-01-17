@@ -114,8 +114,9 @@ standardProviders =
 let
 standardAwsOptions =
   -- AMI from https://nixos.org/nixos/download.html
+  -- Note that these are AZ/region-specific
   -- Nixos 18.09
-  { ami = "ami-0dada3805ce43c55e"
+  { ami = "ami-0f412186fb8a0ec97"
   , keyName = "admin"
 	, instanceType = "t2.micro"
 	-- , instanceType = "t2.medium"

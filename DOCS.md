@@ -1,7 +1,7 @@
 ## Use
 
 ```shell
-askvader deploy my-expression.av
+askvader deploy main.av
 ```
 
 ## Credentials & Security
@@ -16,8 +16,11 @@ Askvader looks for AWS and SSH credentials in the standard locations:
 cat ~/.ssh/id_rsa.pub
 ssh-rsa ...
 
+cat ~/.ssh/id_rsa
+...
+
 cat ~/.aws/credentials
-[dev]                                                                                                                                                                                                                                       
-aws_access_key_id = ...                                                                                                                                                                                                    
+[default]
+aws_access_key_id = ...
 aws_secret_access_key = ...  
 ```

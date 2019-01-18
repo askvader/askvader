@@ -9,9 +9,10 @@ import qualified Text.ParserCombinators.ReadP as P
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (getArgs)
 import Control.Monad
-import Data.List (nub, intercalate)
+import Data.List (nub, isPrefixOf, intercalate)
 import Control.Monad.State
 import Control.Monad.Except
+import Data.Maybe
 
 {- Utility for splitting big .av files containing let-expressions.
 
@@ -77,11 +78,10 @@ TODO other kinds?
 main = do
   [inputPath, dir] <- getArgs
   input <-
-            (unlines . filter (not . null) . take 20 . lines) <$>
             readFile inputPath
 
-  print input
-
+  traverse print $ parseLines input
+{-
   traverse print $ runParser (many1 (
             fmap ("C  "++) codeLine
             <++
@@ -94,18 +94,47 @@ main = do
   let decl = runParser parseDecl input
   traverse print $ transitiveDeps decl
   render dir decl
-
+-}
+  print ()
 
 data Line a
   = LetLine String (Maybe Kind) a
   | CodeLine a
   | OtherLine a
+  | InLine
+  deriving (Show)
+data Block
+  = Block
+    { bBefore :: String
+    , bName :: String
+    , bKind :: Maybe Kind
+    , bBody :: String
+    }
   deriving (Show)
 
--- [Line a] -> [Decl]
+parseLines :: String -> [Line String]
+parseLines = fmap go . lines
+  where
+    go x
+      | "let" `isPrefixOf` x = LetLine "TODO" Nothing x -- TODO parse properly
+      | "in" `isPrefixOf` x = InLine
+      | otherwise = case runParserM nonCodeLine x of
+        Just a -> OtherLine a
+        Nothing -> CodeLine x
+
+-- Covert lines to blocks
+-- Note we rewrite the final 'in X' as a block corresponding to 'let main = X' here.
+linesToBlocks :: [Line a] -> [Block]
+linesToBlocks = undefined
+
+blocksToDecl :: [Block] -> Decl
+blocksToDecl = undefined
 
 runParser :: ReadP a -> String -> a
 runParser p inp = fst . last . ($ inp) $ readP_to_S p
+
+runParserM :: ReadP a -> String -> Maybe a
+runParserM p inp = fmap fst . listToMaybe . reverse . ($ inp) $ readP_to_S p
 
 
 -- Subset of Dhall kinds for which we generate 'package...' files
@@ -135,6 +164,7 @@ parseDecl = undefined
   -- 'in' line
   -- anyLine
 
+{-
 -- | For line scanning, remembering previous character or failing.
 type Scan = StateT (Maybe Char) (Either Bool)
 
@@ -169,6 +199,7 @@ codeLine = do
 emptyLine :: ReadP String
 emptyLine = do
   string "\n"
+-}
 
 nonCodeLine :: ReadP String
 nonCodeLine = do

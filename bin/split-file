@@ -80,8 +80,8 @@ main = do
   input <-
             readFile inputPath
 
-  traverse print $ parseLines input
-  traverse print $ blocksToDecl $ linesToBlocks $ parseLines input
+  -- traverse print $ parseLines input
+  [decl] <- pure $ blocksToDecl $ linesToBlocks $ parseLines input
 {-
   traverse print $ runParser (many1 (
             fmap ("C  "++) codeLine
@@ -93,9 +93,9 @@ main = do
 
 
   let decl = runParser parseDecl input
-  traverse print $ transitiveDeps decl
-  render dir decl
 -}
+  -- traverse print $ transitiveDeps decl
+  render dir decl
   print ()
 
 data Line a
@@ -180,7 +180,7 @@ modifyHead f = modify (mapFirst f)
     mapFirst f (x:xs) = f x : xs
 
 prependBefore :: String -> BlockWriter ()
-prependBefore x = modifyHead (\b -> b { bBefore = x ++ bBefore b })
+prependBefore x = modifyHead (\b -> b { bBefore = x ++ "\n" ++ bBefore b })
 
 setName :: String -> BlockWriter ()
 setName x = modifyHead (\b -> b { bName = x })
@@ -189,7 +189,7 @@ setKind :: Maybe Kind -> BlockWriter ()
 setKind x = modifyHead (\b -> b { bKind = x })
 
 prependBody :: String -> BlockWriter ()
-prependBody x = modifyHead (\b -> b { bBody = x ++ bBody b })
+prependBody x = modifyHead (\b -> b { bBody = x ++ "\n" ++ bBody b })
 
 blocksToDecl :: [Block] -> [Decl]
 blocksToDecl = foldl (\r x -> pure $ Decl { name = bName x, kind = bKind x, body = bBefore x ++ "\n" ++ bBody x, deps = r}) []

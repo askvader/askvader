@@ -174,7 +174,7 @@ let nixPre =
 --
 -- TODO all these Texts refer to the TF resource name...
 let
-AwsAttribute =
+AwsAttribute : Type =
   < S3BucketId : Text -- { name : Text }
   | S3BucketRegion : Text -- { name : Text }
   | AwsInstancePrivateIp : Text -- { name : Text }

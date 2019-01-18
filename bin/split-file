@@ -81,6 +81,7 @@ main = do
             readFile inputPath
 
   traverse print $ parseLines input
+  traverse print $ blocksToDecl $ linesToBlocks $ parseLines input
 {-
   traverse print $ runParser (many1 (
             fmap ("C  "++) codeLine
@@ -135,8 +136,60 @@ parseLines = fmap go . lines
 --
 -- Easier: read backwards and emit block at each let/in, including all immediately preceding OtherLines
 -- We'll do this the ugly way by keeping a Block as a state and filling it in as we go along
-linesToBlocks :: [Line a] -> [Block]
-linesToBlocks = undefined
+linesToBlocks :: [Line String] -> [Block]
+linesToBlocks = snd . flip runState [emptyBlock] . (>> finish) . void . traverse go . reverse
+  where
+    go :: Line String -> BlockWriter ()
+    -- TOOD if the block is named, prepend before, other prepend body
+    go (OtherLine x) = prependBefore x
+    go (CodeLine x) = do
+      newBlockIfNeeded
+      prependBody x
+    go (LetLine n k x) = do
+      newBlockIfNeeded
+      setName n
+      setKind k
+      prependBody x
+    go (InLine) = do
+      newBlockIfNeeded
+      setName "main"
+      setKind (Just Term)
+
+    -- If not an OtherLine and the current block has name, then push new
+    newBlockIfNeeded = do
+      n <- currentBlockIsNamed
+      when n newBlock
+
+    finish :: BlockWriter ()
+    finish = pure ()
+
+emptyBlock = Block "" "" Nothing ""
+
+type BlockWriter = State [Block]
+
+currentBlockIsNamed :: BlockWriter Bool
+currentBlockIsNamed = ((/= "") . bName . head) <$> get
+
+newBlock :: BlockWriter ()
+newBlock = modify (emptyBlock :)
+
+modifyHead :: (Block -> Block) -> BlockWriter ()
+modifyHead f = modify (mapFirst f)
+  where
+    mapFirst f [] = []
+    mapFirst f (x:xs) = f x : xs
+
+prependBefore :: String -> BlockWriter ()
+prependBefore x = modifyHead (\b -> b { bBefore = x ++ bBefore b })
+
+setName :: String -> BlockWriter ()
+setName x = modifyHead (\b -> b { bName = x })
+
+setKind :: Maybe Kind -> BlockWriter ()
+setKind x = modifyHead (\b -> b { bKind = x })
+
+prependBody :: String -> BlockWriter ()
+prependBody x = modifyHead (\b -> b { bBody = x ++ bBody b })
 
 blocksToDecl :: [Block] -> [Decl]
 blocksToDecl = foldl (\r x -> pure $ Decl { name = bName x, kind = bKind x, body = bBefore x ++ "\n" ++ bBody x, deps = r}) []

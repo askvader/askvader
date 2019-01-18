@@ -3,32 +3,22 @@
 --
       -- BAR
 let concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
-let
-generate = ./vendor/dhall-lang/Prelude/List/generate
-let
-Functor = ./vendor/dhall-bhat/Functor/Type
-let
-List_functor = ./vendor/dhall-bhat/List/functor
-let
-Applicative = ./vendor/dhall-bhat/Applicative/Type
-let
-liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
+let generate = ./vendor/dhall-lang/Prelude/List/generate
+let Functor = ./vendor/dhall-bhat/Functor/Type
+let List_functor = ./vendor/dhall-bhat/List/functor
+let Applicative = ./vendor/dhall-bhat/Applicative/Type
+let liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
 let Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
-let
-liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
-let
-mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
+let liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
+let mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
 let T = Type
 let TT = Type -> Type
 -- Free objects of kind (Type -> Type) using final encoding
-let
-Free1 = \(class : TT -> T) -> \(f:TT) -> \(a:T) ->
+let Free1 = \(class : TT -> T) -> \(f:TT) -> \(a:T) ->
   forall (g:TT) -> class g -> (forall (x:T) -> f x -> g x) -> g a
-let
-FreeAp = Free1 Applicative
-let
-FreeAp_functor
-  : forall (f : TT) -> Functor (FreeAp f)
+let FreeAp = Free1 Applicative
+  -- : forall (f : TT) -> Functor (FreeAp f)
+let FreeAp_functor
   = \(ff : TT) ->
     { map =
          \(a : T)
@@ -43,9 +33,8 @@ FreeAp_functor
         ): FreeAp ff b
         )
     }
-let
-FreeAp_applicative
-  : forall (f : TT) -> Applicative (FreeAp f)
+  -- : forall (f : TT) -> Applicative (FreeAp f)
+let FreeAp_applicative
   = \(ff : TT) ->
     { pure =  λ(a : Type) → λ(x : a) →
       (( \(gg : TT)
@@ -64,9 +53,8 @@ FreeAp_applicative
          -> ggAp.ap a b (f gg ggAp k) (x gg ggAp k)
          )
     } /\ FreeAp_functor ff
-let
-liftFreeAp
-  : forall (f : TT) -> forall (a : T) -> f a -> FreeAp f a
+  -- : forall (f : TT) -> forall (a : T) -> f a -> FreeAp f a
+let liftFreeAp
   =   \(f:TT)
     ->\(a:T)
     ->\(x:f a)
@@ -74,21 +62,19 @@ liftFreeAp
       ->\(gAp:Applicative g)
       ->\(k : forall (x:T) -> f x -> g x)
       -> k a x)
-let
-retractFreeAp
-  : forall (f : TT)
-  -> forall (a : T)
-  -> forall (ap : Applicative f)
-  -> forall (fAp : FreeAp f a)
-  -> f a
+--  : forall (f : TT)
+--  -> forall (a : T)
+--  -> forall (ap : Applicative f)
+--  -> forall (fAp : FreeAp f a)
+--  -> f a
+let retractFreeAp
   = \(f:TT) -> \(a:T) ->
   let id = \(b:T) -> \(x : f b) -> x in
   \(ap:Applicative f) -> \(fAp:FreeAp f a) ->
     fAp f ap id : f a
 -- Terraform providers used by the code we generate
 -- Hardcoded for now
-let
-standardProviders =
+let standardProviders =
   ''
   provider "aws" {
     region  = "eu-west-1"
@@ -111,8 +97,7 @@ standardProviders =
 --  AMI from https://nixos.org/nixos/download.html
 --  Note that these are AZ/region-specific
 --  Nixos 18.09
-let
-standardAwsOptions =
+let standardAwsOptions =
   { ami = "ami-0f412186fb8a0ec97"
   , instanceType = "t2.micro"
   , keyName = "admin"
@@ -167,8 +152,7 @@ let nixPre =
 --    ... }
 --
 -- TODO all these Texts refer to the TF resource name...
-let
-AwsAttribute : Type =
+let AwsAttribute : Type =
   < S3BucketId : Text -- { name : Text }
   | S3BucketRegion : Text -- { name : Text }
   | AwsInstancePrivateIp : Text -- { name : Text }
@@ -179,8 +163,7 @@ AwsAttribute : Type =
 --
 -- Returns the Dhall type of the given AwsAttribute
 --
-let
-typeOf = \(x : AwsAttribute) ->
+let typeOf = \(x : AwsAttribute) ->
   merge
   { S3BucketId = \(_:Text) -> "Text"
   , S3BucketRegion = \(_:Text) -> "Text"
@@ -189,18 +172,15 @@ typeOf = \(x : AwsAttribute) ->
   , AwsIAMUserUniqueId = \(_:Text) -> "Text"
   }
   x : Text
-let
-CannedACL =
+let CannedACL =
   < Private : {}
   | PublicRead : {}
   | PublicReadWrite : {}
   >
 
-let
-VersioningOptions = { mfaDelete : Bool }
+let VersioningOptions = { mfaDelete : Bool }
 
-let
-S3BucketR =
+let S3BucketR =
   { resourceName : Text
   , bucketName : Optional Text
   , acl : Optional CannedACL
@@ -208,19 +188,16 @@ S3BucketR =
   }
 
 -- TODO All values >255 are normalized as 0
-let
-Blob = List Natural
+let Blob = List Natural
 
-let
-S3BucketObjectSource =
+let S3BucketObjectSource =
   < Utf8 : Text -- TODO what is Dhall text?
                 -- Following dhall-haskell it is Data.Text.Text, which has a canonical binary representation (UTF8)
                 -- We should use that!
   | Binary : Blob
   >
 
-let
-S3BucketObjectR =
+let S3BucketObjectR =
   { bucketName : Text
   , key : Text
   , source : S3BucketObjectSource
@@ -230,8 +207,7 @@ S3BucketObjectR =
 let Monoid = ./vendor/dhall-bhat/Monoid/Type
 
 -- Const functor
-let
-Const = \(a : Type) -> \(b : Type) -> a
+let Const = \(a : Type) -> \(b : Type) -> a
 let Const_functor = \(x:Type) ->
   { map =
     \(a:T)
@@ -256,8 +232,7 @@ let Const_applicative = \(m:Type) -> \(mon:Monoid m) ->
 -- For now
 -- 1) We only support launhing NixOS instances
 -- 2) This must be a valid Dhall expression that compiles to a valid NixOS config
-let
-AwsInstanceConfig = Text
+let AwsInstanceConfig = Text
 
 
 
@@ -273,10 +248,8 @@ AwsInstanceConfig = Text
 --
 -- Full example
 --
---    let
---      Id = \(a : Type) → a
---    in let
---      Const = \(a : Type) → \(b : Type) → a
+--    let --      Id = \(a : Type) → a
+--    in let --      Const = \(a : Type) → \(b : Type) → a
 --    in
 --
 --    (\(f:Type -> Type) ->
@@ -292,8 +265,7 @@ AwsInstanceConfig = Text
 -- A "unityped" set of Terraform return values.
 --
 -- This type is part of the [Evaluator Protocol], see that note.
-let
-PrimAttr = <N:Natural | T:Text>
+let PrimAttr = <N:Natural | T:Text>
 
 -- An attribute
 --  * attrName is a valid TF splice expression, e.g. foo.bar
@@ -301,19 +273,13 @@ PrimAttr = <N:Natural | T:Text>
 --    - Natural
 --    - Text
 --  * attrParse is a parser that extracts a Dhall value of type attrType
-let
-AttrF = \(a:Type) -> {attrName:Text, attrType:Text, attrParse:PrimAttr -> Optional a}
+let AttrF = \(a:Type) -> {attrName:Text, attrType:Text, attrParse:PrimAttr -> Optional a}
 
-let
-toNix = \(x:Text) -> { nixExpr = nixPre ++ x }
-let
-toNixShow = \(x:Natural) -> toNix (Natural/show x)
-let
-Attr = FreeAp AttrF
-let
-mapAttr = (FreeAp_functor AttrF).map
-let
-liftA2Attr
+let toNix = \(x:Text) -> { nixExpr = nixPre ++ x }
+let toNixShow = \(x:Natural) -> toNix (Natural/show x)
+let Attr = FreeAp AttrF
+let mapAttr = (FreeAp_functor AttrF).map
+let liftA2Attr
   :   ∀(a : Type)
     → ∀(b : Type)
     → ∀(c : Type)
@@ -322,10 +288,8 @@ liftA2Attr
     → Attr b
     → Attr c
   = liftA2 Attr (FreeAp_applicative AttrF)
-let
-id = \(a:Type) -> \(x:a) -> x
-let
-someT
+let id = \(a:Type) -> \(x:a) -> x
+let someT
   : PrimAttr -> Optional Text
   = \(x:PrimAttr) ->
   merge
@@ -346,8 +310,7 @@ let unsafeTextAttr = \(name:Text) ->
         }
         x
     }
-let
-someAttr
+let someAttr
   = unsafeTextAttr  "thisAttrReturnsText"
   : Attr Text
 -- See NOTE [Safe attributes]
@@ -362,8 +325,7 @@ let unsafeNatAttr = \(name:Text) ->
         }
         x
     }
-let
-someNatAttr
+let someNatAttr
   = unsafeNatAttr  "thisAttrReturnsNat"
   : Attr Natural
 
@@ -373,11 +335,9 @@ someNatAttr
 --
 -- For now, all nodes are NixOS based, and Conf is an expression in the Nix config language, suitable
 -- for dropping in /etc/nixos/configuration.nix
-let
-NodeConf = {nixExpr:Text}
+let NodeConf = {nixExpr:Text}
 
-let
-AwsInstanceR =
+let AwsInstanceR =
   -- Affects name of instance
   { name : Text
 
@@ -389,26 +349,22 @@ AwsInstanceR =
   , staticFiles : List { path : Text, content : Text }
   }
 
-let
-AwsIAMUserR =
+let AwsIAMUserR =
   { name : Text
   }
 
 -- AWS IAM Group
 -- In TF this generates both the aws_iam_group and aws_iam_group_membership resources.
-let
-AwsIAMGroupR =
+let AwsIAMGroupR =
   { name : Text
   , members : List AwsIAMUserR
   }
 
-let
-AwsIAMRoleR =
+let AwsIAMRoleR =
   { assumeRolePolicy : Text
   }
 
-let
-AwsIAMPolicyR =
+let AwsIAMPolicyR =
   { arn : Text
   }
 
@@ -440,8 +396,7 @@ let RandomStringR =
 -- NOTE [Source vs Data] We're not distinguishing resource/data_source a la Terraform
 -- Convention is: All TF data sources are suffixed with 'Data'
 
-let
-AwsResource =
+let AwsResource =
   < AwsInstance : AwsInstanceR
   | S3Bucket : S3BucketR
   | S3BucketObject : S3BucketObjectR
@@ -458,8 +413,7 @@ AwsResource =
   | RandomString : RandomStringR
   >
 
-let
-foldMap =
+let foldMap =
   \(a : Type) ->
   \(xs : List a) ->
   \(r : Type) ->
@@ -471,8 +425,7 @@ foldMap =
   List/fold a xs r (\(x : a) -> m.compose (m.single x)) m.empty
   : r
 
-let
-concatMapSepBy =
+let concatMapSepBy =
   \(pre : Text) ->
   \(end : Text) ->
   \(delim : Text) ->
@@ -488,8 +441,7 @@ concatMapSepBy =
     in pre ++ inner ++ end
   : Text
 
-let
-noFiles = [] : List {content:Text,path:Text}
+let noFiles = [] : List {content:Text,path:Text}
 
 
 --
@@ -901,8 +853,7 @@ in
       { name = "x"
       , staticFiles = noFiles
       , config =
-        let
-          mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ # foo = " ++ Natural/show x ++
+        let           mkConf = \(x:Natural) -> \(y:Text) -> { nixExpr = nixPre ++ "{ # foo = " ++ Natural/show x ++
           "; bar = " ++ y ++ "; \n virtualisation.docker.enable = true; }" }
         in
           liftA2Attr Natural Text NodeConf mkConf

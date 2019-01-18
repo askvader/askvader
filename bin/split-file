@@ -128,7 +128,13 @@ parseLines = fmap go . lines
 -- Note we rewrite the final 'in X' as a block corresponding to 'let main = X' here.
 --   States
 --   A) We're waiting for a LetLine or InLine
---   B) We've encountered a LetLine/InLine, and are waiting for a non-CodeLine or EOI, at which point we'll emit a new Block and go to state A
+--   B) We've encountered a LetLine/InLine, and are waiting for
+--      (a situation in which there are no more CodeLines before the next Let/In/EOI)
+--    ~ (OtherLines followed by Let/In/EOI) or Let/In/EOI
+--    at which point we'll emit a new Block and go to state A
+--
+-- Easier: read backwards and emit block at each let/in, including all immediately preceding OtherLines
+-- We'll do this the ugly way by keeping a Block as a state and filling it in as we go along
 linesToBlocks :: [Line a] -> [Block]
 linesToBlocks = undefined
 

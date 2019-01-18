@@ -2,12 +2,16 @@
 -- vi:syntax=haskell
 {-# LANGUAGE OverloadedStrings #-}
 
+import Data.Char
 import Control.Applicative
-import Text.ParserCombinators.ReadP
+import Text.ParserCombinators.ReadP hiding (get)
+import qualified Text.ParserCombinators.ReadP as P
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (getArgs)
 import Control.Monad
 import Data.List (nub, intercalate)
+import Control.Monad.State
+import Control.Monad.Except
 
 {- Utility for splitting big .av files containing let-expressions.
 
@@ -71,12 +75,34 @@ TODO other kinds?
 -}
 
 main = do
-  print ()
   [inputPath, dir] <- getArgs
-  input <- readFile inputPath
+  input <-
+            (unlines . filter (not . null) . take 20 . lines) <$>
+            readFile inputPath
+
+  print input
+
+  traverse print $ runParser (many1 (
+            fmap ("C  "++) codeLine
+            <++
+            fmap ("NC "++) nonCodeLine
+            -- <++
+            -- emptyLine
+          )) input
+
+
   let decl = runParser parseDecl input
   traverse print $ transitiveDeps decl
   render dir decl
+
+
+data Line a
+  = LetLine String (Maybe Kind) a
+  | CodeLine a
+  | OtherLine a
+  deriving (Show)
+
+-- [Line a] -> [Decl]
 
 runParser :: ReadP a -> String -> a
 runParser p inp = fst . last . ($ inp) $ readP_to_S p
@@ -101,7 +127,65 @@ data Decl = Decl
 
 -- Parse a file, return top level declaration (called 'main').
 parseDecl :: ReadP Decl
+parseDecl = undefined
+  -- many nonCodeLine
+  -- 'let' line
+  -- many1 codeLine
+
+  -- 'in' line
+  -- anyLine
+
+-- | For line scanning, remembering previous character or failing.
+type Scan = StateT (Maybe Char) (Either Bool)
+
+scanChar :: Char -> Scan ()
+scanChar curChar = do
+  prevChar <- get
+  put $ Just curChar
+  if prevChar == Just '-' && curChar == '-'
+    then liftEither (Left False) -- We found '--', this is not a code line
+    else do
+      if curChar == '\n' -- We cound a newline, this is not a code line
+        then liftEither (Left False)
+        else if isSpace curChar -- This is a space char, continue searching
+          then pure ()
+          -- This is a code line
+          else liftEither (Left True)
+
+
+codeLine :: ReadP String
+codeLine = do
+  la <- look
+  -- If there is only space before the next \n or '--', this is not a code line
+  case flip runStateT Nothing $ traverse scanChar la of
+    Left False -> -- Not a code line
+      fail "Not a code line"
+    Left True -> do
+      xs <- manyTill P.get (char '\n')
+      pure $ xs ++ "\n"
+    Right _ -> -- End of input
+      pure la
+
+emptyLine :: ReadP String
+emptyLine = do
+  string "\n"
+
+nonCodeLine :: ReadP String
+nonCodeLine = do
+  skipSpaces
+  la <- look
+  case la of
+    [] ->
+      pure ""
+    '\n':_ ->
+      pure ""
+    _ -> do
+      string "--"
+      xs <- manyTill P.get (char '\n')
+      pure $ "--" ++ xs ++ "\n"
+
 -- TODO real parser
+{-
 parseDecl = pure $
   Decl "main" (Just Term)
   "-- This is main\nbar"
@@ -115,6 +199,7 @@ parseDecl = pure $
       ]
     ]
   ]
+-}
 
 -- Transitive deps of a decl, not including itself
 transitiveDeps :: Decl -> [Decl]

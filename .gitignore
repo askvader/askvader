@@ -4,3 +4,4 @@ result
 *.tfstate
 *tfstate*
 .DS_Store
+.history

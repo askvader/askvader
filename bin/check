@@ -1,2 +1,2 @@
 # TODO brief output of the 'dhall type' command + correct line in error messages?
-cat cloud.av | dhall
+echo "./$1" | dhall

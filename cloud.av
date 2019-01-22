@@ -2,15 +2,15 @@
 -- FOO
 --
       -- BAR
-let concatMap = ./vendor/dhall-lang/Prelude/Text/concatMap
-let generate = ./vendor/dhall-lang/Prelude/List/generate
-let Functor = ./vendor/dhall-bhat/Functor/Type
-let List_functor = ./vendor/dhall-bhat/List/functor
-let Applicative = ./vendor/dhall-bhat/Applicative/Type
-let liftA2 = ./vendor/dhall-bhat/Applicative/liftA2
-let Coyoneda = ./vendor/dhall-bhat/Coyoneda/Type
-let liftCoyoneda = ./vendor/dhall-bhat/Coyoneda/lift
-let mapCoyoneda = \(f : Type -> Type) -> (./vendor/dhall-bhat/Coyoneda/functor f).map
+let concatMap = ../vendor/dhall-lang/Prelude/Text/concatMap
+let generate = ../vendor/dhall-lang/Prelude/List/generate
+let Functor = ../vendor/dhall-bhat/Functor/Type
+let List_functor = ../vendor/dhall-bhat/List/functor
+let Applicative = ../vendor/dhall-bhat/Applicative/Type
+let liftA2 = ../vendor/dhall-bhat/Applicative/liftA2
+let Coyoneda = ../vendor/dhall-bhat/Coyoneda/Type
+let liftCoyoneda = ../vendor/dhall-bhat/Coyoneda/lift
+let mapCoyoneda = \(f : Type -> Type) -> (../vendor/dhall-bhat/Coyoneda/functor f).map
 let T = Type
 let TT = Type -> Type
 -- Free objects of kind (Type -> Type) using final encoding
@@ -172,15 +172,15 @@ let typeOf = \(x : AwsAttribute) ->
   , AwsIAMUserUniqueId = \(_:Text) -> "Text"
   }
   x : Text
-let CannedACL =
+let CannedACL : Type =
   < Private : {}
   | PublicRead : {}
   | PublicReadWrite : {}
   >
 
-let VersioningOptions = { mfaDelete : Bool }
+let VersioningOptions : Type = { mfaDelete : Bool }
 
-let S3BucketR =
+let S3BucketR : Type =
   { resourceName : Text
   , bucketName : Optional Text
   , acl : Optional CannedACL
@@ -188,23 +188,23 @@ let S3BucketR =
   }
 
 -- TODO All values >255 are normalized as 0
-let Blob = List Natural
+let Blob : Type = List Natural
 
-let S3BucketObjectSource =
+let S3BucketObjectSource : Type =
   < Utf8 : Text -- TODO what is Dhall text?
                 -- Following dhall-haskell it is Data.Text.Text, which has a canonical binary representation (UTF8)
                 -- We should use that!
   | Binary : Blob
   >
 
-let S3BucketObjectR =
+let S3BucketObjectR : Type =
   { bucketName : Text
   , key : Text
   , source : S3BucketObjectSource
   }
 
 
-let Monoid = ./vendor/dhall-bhat/Monoid/Type
+let Monoid = ../vendor/dhall-bhat/Monoid/Type
 
 -- Const functor
 let Const = \(a : Type) -> \(b : Type) -> a
@@ -232,7 +232,7 @@ let Const_applicative = \(m:Type) -> \(mon:Monoid m) ->
 -- For now
 -- 1) We only support launhing NixOS instances
 -- 2) This must be a valid Dhall expression that compiles to a valid NixOS config
-let AwsInstanceConfig = Text
+let AwsInstanceConfig : Type = Text
 
 
 
@@ -265,7 +265,7 @@ let AwsInstanceConfig = Text
 -- A "unityped" set of Terraform return values.
 --
 -- This type is part of the [Evaluator Protocol], see that note.
-let PrimAttr = <N:Natural | T:Text>
+let PrimAttr : Type = <N:Natural | T:Text>
 
 -- An attribute
 --  * attrName is a valid TF splice expression, e.g. foo.bar
@@ -335,9 +335,9 @@ let someNatAttr
 --
 -- For now, all nodes are NixOS based, and Conf is an expression in the Nix config language, suitable
 -- for dropping in /etc/nixos/configuration.nix
-let NodeConf = {nixExpr:Text}
+let NodeConf : Type = {nixExpr:Text}
 
-let AwsInstanceR =
+let AwsInstanceR : Type =
   -- Affects name of instance
   { name : Text
 
@@ -349,45 +349,45 @@ let AwsInstanceR =
   , staticFiles : List { path : Text, content : Text }
   }
 
-let AwsIAMUserR =
+let AwsIAMUserR : Type =
   { name : Text
   }
 
 -- AWS IAM Group
 -- In TF this generates both the aws_iam_group and aws_iam_group_membership resources.
-let AwsIAMGroupR =
+let AwsIAMGroupR : Type =
   { name : Text
   , members : List AwsIAMUserR
   }
 
-let AwsIAMRoleR =
+let AwsIAMRoleR : Type =
   { assumeRolePolicy : Text
   }
 
-let AwsIAMPolicyR =
+let AwsIAMPolicyR : Type =
   { arn : Text
   }
 
-let AwsSubnetR =
+let AwsSubnetR : Type =
   { vpcId : Text
   , cidrBlock : Text
   }
 
-let AwsEKSClusterR =
+let AwsEKSClusterR : Type =
   { name : Text
   , roleArn : Text
   , vpcConfig : { subnetIds : List Text }
   }
 
 -- min/max inclusive
-let RandomIntegerR =
+let RandomIntegerR : Type =
   { name : Text
   , min : Natural -- Inclusive
   , max: Natural -- Inclusive
   , seed : Optional Natural
   }
 
-let RandomStringR =
+let RandomStringR : Type =
   { name : Text
   , length : Natural
   }
@@ -396,7 +396,7 @@ let RandomStringR =
 -- NOTE [Source vs Data] We're not distinguishing resource/data_source a la Terraform
 -- Convention is: All TF data sources are suffixed with 'Data'
 
-let AwsResource =
+let AwsResource : Type =
   < AwsInstance : AwsInstanceR
   | S3Bucket : S3BucketR
   | S3BucketObject : S3BucketObjectR
@@ -537,7 +537,7 @@ let noFiles = [] : List {content:Text,path:Text}
    -- can not depend on Attr values. We could enrich the return type here to include more
    -- such data if needed.
 
-let EvaluatorInput =
+let EvaluatorInput : Type =
    { tfCodeBefore : Text
    , tfCodeAfter : Text
    , attrNames: List Text
@@ -548,16 +548,16 @@ let staticInput
   : Text -> EvaluatorInput
   = \(x : Text) -> { tfCodeBefore = x, tfCodeAfter = "", attrNames = [] : List Text, tfContinue = \(x:List PrimAttr) -> None NodeConf }
 
-let Optional_monad = ./vendor/dhall-bhat/Optional/monad
-let Optional_functor = ./vendor/dhall-bhat/Optional/functor
-let StateT = ./vendor/dhall-bhat/StateT/Type
-let StateT_applicative = ./vendor/dhall-bhat/StateT/applicative
+let Optional_monad = ../vendor/dhall-bhat/Optional/monad
+let Optional_functor = ../vendor/dhall-bhat/Optional/functor
+let StateT = ../vendor/dhall-bhat/StateT/Type
+let StateT_applicative = ../vendor/dhall-bhat/StateT/applicative
   (List PrimAttr) Optional Optional_monad
-let indexed = ./vendor/dhall-lang/Prelude/List/indexed
-let filter = ./vendor/dhall-lang/Prelude/List/filter
-let map = ./vendor/dhall-lang/Prelude/List/map
-let not = ./vendor/dhall-lang/Prelude/Bool/not
-let isZero = ./vendor/dhall-lang/Prelude/Natural/isZero
+let indexed = ../vendor/dhall-lang/Prelude/List/indexed
+let filter = ../vendor/dhall-lang/Prelude/List/filter
+let map = ../vendor/dhall-lang/Prelude/List/map
+let not = ../vendor/dhall-lang/Prelude/Bool/not
+let isZero = ../vendor/dhall-lang/Prelude/Natural/isZero
 -- TODO use better tail
 let uncons
   : ∀(a : Type) → List a → ∀(list : Type) → ∀(cons : a → List a → list) → ∀(nil : list) → list
@@ -613,7 +613,7 @@ let runAttr
         (parser inputs)
 
 let Text_monoid = { unit = "", op = \(x:Text) -> \(y:Text) -> x ++ y } : Monoid Text
-let List_monoid = ./vendor/dhall-bhat/List/monoid
+let List_monoid = ../vendor/dhall-bhat/List/monoid
 
 let getAttrTypes
   : Attr NodeConf -> List Text
@@ -664,11 +664,11 @@ let awsInstanceToInput
     let wrapAttr = \(x : Text) -> "\"\${" ++ x ++ "}\""
     let attrTypeBlock =
       ''
-      "${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text (id Text) (getAttrTypes instance.config)}"
+      "${../vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text (id Text) (getAttrTypes instance.config)}"
       ''
     let attrBlock =
       ''
-      ${./vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
+      ${../vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
       ''
     in
     { tfCodeBefore =
@@ -782,7 +782,7 @@ let maybeToList
 let catMaybes
   : forall (a : Type) -> List (Optional a) -> List a
   = \(a : Type) ->
-    ./vendor/dhall-lang/Prelude/List/concatMap (Optional a) a (maybeToList a)
+    ../vendor/dhall-lang/Prelude/List/concatMap (Optional a) a (maybeToList a)
 
 -- Convert a resource to an input
 -- TODO the Optional wrapper is just a debugging tool, should be removed

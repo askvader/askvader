@@ -1,6 +1,6 @@
 #!/usr/bin/env runghc
 -- vi:syntax=haskell
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, DeriveAnyClass #-}
 
 import Data.Char
 import Control.Applicative
@@ -13,6 +13,10 @@ import Data.List (nub, isPrefixOf, intercalate)
 import Control.Monad.State
 import Control.Monad.Except
 import Data.Maybe
+import GHC.Generics(Generic)
+import qualified Data.List as List
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy as LazyByteString
 
 {- Utility for splitting big .av files containing let-expressions.
 
@@ -80,22 +84,15 @@ main = do
   input <-
             readFile inputPath
 
-  -- traverse print $ parseLines input
-  [decl] <- pure $ blocksToDecl $ linesToBlocks $ parseLines input
-{-
-  traverse print $ runParser (many1 (
-            fmap ("C  "++) codeLine
-            <++
-            fmap ("NC "++) nonCodeLine
-            -- <++
-            -- emptyLine
-          )) input
+  let lines = parseLines input
+  let blocks = linesToBlocks lines
+  let decls = blocksToDecl blocks
 
+  -- TODO DEBUG
+  -- traverse print lines
+  LazyByteString.writeFile "tmp.decls.json" (Aeson.encode decls)
 
-  let decl = runParser parseDecl input
--}
-  -- traverse print $ transitiveDeps decl
-  render dir decl
+  render dir $ head decls
   print ()
 
 data Line a
@@ -109,7 +106,7 @@ data Block
     { bBefore :: String
     , bName :: String
     , bKind :: Maybe Kind
-    , bBody :: String
+    , bBody :: String -- TODO see comment in Decl type, the : or = rule applies here too
     }
   deriving (Show)
 
@@ -154,6 +151,7 @@ linesToBlocks = snd . flip runState [emptyBlock] . (>> finish) . void . traverse
       newBlockIfNeeded
       setName "main"
       setKind (Just Term)
+      prependBody "="
 
     -- If not an OtherLine and the current block has name, then push new
     newBlockIfNeeded = do
@@ -192,7 +190,8 @@ prependBody :: String -> BlockWriter ()
 prependBody x = modifyHead (\b -> b { bBody = x ++ "\n" ++ bBody b })
 
 blocksToDecl :: [Block] -> [Decl]
-blocksToDecl = foldl (\r x -> pure $ Decl { name = bName x, kind = bKind x, body = bBefore x ++ "\n" ++ bBody x, deps = r}) []
+blocksToDecl = foldl (\r x -> pure $ Decl { name = bName x, kind = bKind x, before = bBefore x
+  , body = bBody x, deps = r}) []
 
 -- TODO do we really need last/reverse?
 runParser :: ReadP a -> String -> a
@@ -204,7 +203,7 @@ runParserM p inp = fmap fst . listToMaybe . reverse . ($ inp) $ readP_to_S p
 
 -- Subset of Dhall kinds for which we generate 'package...' files
 data Kind = Term | Type --  | TypeToType
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic, Aeson.FromJSON, Aeson.ToJSON)
 
 showKind Nothing = ""
 showKind (Just Term) = ""
@@ -214,10 +213,11 @@ showKind (Just Type) = ": Type"
 data Decl = Decl
   { name :: String
   , kind :: (Maybe Kind) -- Nothing if not in the subset we care about, see Kind
-  , body :: String
+  , before :: String -- Preable, comments lines only
+  , body :: String -- TODO should always start with = or : (modulo comment lines and space)
   , deps :: [Decl] -- previous declarations
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic, Aeson.FromJSON, Aeson.ToJSON)
 
 -- Parse a file, return top level declaration (called 'main').
   -- many nonCodeLine
@@ -266,6 +266,13 @@ emptyLine = do
 
 restOfInput = P.many P.get
 
+-- | Parse a let-line.
+--
+-- We only accept let lines on these forms (modulo space);
+--  let Name : Type = e"
+--  let name = e"
+--  let name"
+--
 parseLet :: ReadP (String, Maybe Kind, String)
 parseLet = do
   string "let"
@@ -279,16 +286,18 @@ parseLet = do
         string "Type"
         skipSpaces
         string "="
-        (\x -> (name, Just Type, x)) <$> restOfInput
+        (\x -> (name, Just Type, " : Type = " ++ x)) <$> restOfInput
 
     , do
         string "="
         let ty = if isLower (head name) then Just Term else Nothing
-        (\x -> (name, ty, x)) <$> restOfInput
+        (\x -> (name, ty, " = " ++ x)) <$> restOfInput
     , do
         la <- look
         let ty = if isLower (head name) then Just Term else Nothing
-        if null la then pure (name, ty, "") else fail ""
+        if null la
+            then pure (name, ty, "")
+            else fail ""
     ]
 
 
@@ -331,9 +340,12 @@ transitiveDeps = init . nub . go
 -- TODO use transitiveDeps and filter...
 importsRec :: Kind -> Decl -> String
 importsRec k decl =
-  (\x -> "{ " ++ x ++ "\n}") . intercalate "\n, " . fmap renderEntry $ filter ((== Just k) . kind) (transitiveDeps decl)
+  (\x -> "{ " ++ x ++ "\n}") . intercalate "\n, " . fmap renderEntry $ List.nubBy (comparingEq name) $ filter ((== Just k) . kind) (transitiveDeps decl)
   where
     renderEntry decl = name decl ++ " = ./" ++ name decl ++ ".av"
+
+    comparingEq :: Eq b => (a -> b) -> a -> a -> Bool
+    comparingEq f x y = f x == f y
 
 -- Generate a let binding importing the decl of a name
 -- For all transitive dependencies of the given decl (but not itself!)
@@ -347,9 +359,13 @@ render path decl = do
   createDirectoryIfMissing True path
   let write name = writeFile (path ++ "/" ++ name ++ ".av") . (++ "\n")
 
+-- TODO TODO!!
+-- NOT in E
+-- BUT let N [[TODO put eq sign here]] E in N
+--    * Does the let parser always eat the equals sign?
   -- Write a file for this decl and its dependencies
   write (name decl)
-    (depImports decl ++ (if null (depImports decl) then "" else "\nin") ++ "\n" ++ body decl)
+    (before decl ++ "\n" ++ depImports decl ++ "\nlet "++name decl++"\n" ++ body decl ++ "\nin\n" ++ name decl)
   void $ traverse (render path) (deps decl)
 
   -- Write the top level package...

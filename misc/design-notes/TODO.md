@@ -1,3 +1,12 @@
+TODO upload text to S3
+TODO make instance read from S3 (using CLI)
+TODO restart an instance on failure (4 min outage OK)
+TODO restrict a bucket to a VCP, single user write (create user!) and read acc. to single instance
+TODO make lambda function restart instance on change to bucket
+
+
+
+---
 TODO make use of the following Kubernetes networking notes
    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).
    In any private k8s network you have IPs for nodes ('actual' machines), Pods and Services (faked, using iptables).

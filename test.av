@@ -1,0 +1,3 @@
+
+let cloud = ./askvader/main.av
+in cloud.run cloud.test

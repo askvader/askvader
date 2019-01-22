@@ -1,0 +1,32 @@
+
+let concatMap  = ./concatMap.av
+let generate  = ./generate.av
+let Functor  = ./Functor.av
+let List_functor  = ./List_functor.av
+let Applicative  = ./Applicative.av
+let liftA2  = ./liftA2.av
+let Coyoneda  = ./Coyoneda.av
+let liftCoyoneda  = ./liftCoyoneda.av
+let mapCoyoneda  = ./mapCoyoneda.av
+let T  = ./T.av
+let TT  = ./TT.av
+let Free1  = ./Free1.av
+let FreeAp  = ./FreeAp.av
+let FreeAp_functor  = ./FreeAp_functor.av
+let FreeAp_applicative  = ./FreeAp_applicative.av
+let liftFreeAp  = ./liftFreeAp.av
+let retractFreeAp  = ./retractFreeAp.av
+let standardProviders  = ./standardProviders.av
+let standardAwsOptions  = ./standardAwsOptions.av
+let nixPre  = ./nixPre.av
+let AwsAttribute : Type = ./AwsAttribute.av
+let typeOf  = ./typeOf.av
+let CannedACL
+ : Type = 
+  < Private : {}
+  | PublicRead : {}
+  | PublicReadWrite : {}
+  >
+
+in
+CannedACL

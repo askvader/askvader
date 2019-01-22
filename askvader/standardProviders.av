@@ -1,0 +1,41 @@
+-- Terraform providers used by the code we generate
+-- Hardcoded for now
+
+let concatMap  = ./concatMap.av
+let generate  = ./generate.av
+let Functor  = ./Functor.av
+let List_functor  = ./List_functor.av
+let Applicative  = ./Applicative.av
+let liftA2  = ./liftA2.av
+let Coyoneda  = ./Coyoneda.av
+let liftCoyoneda  = ./liftCoyoneda.av
+let mapCoyoneda  = ./mapCoyoneda.av
+let T  = ./T.av
+let TT  = ./TT.av
+let Free1  = ./Free1.av
+let FreeAp  = ./FreeAp.av
+let FreeAp_functor  = ./FreeAp_functor.av
+let FreeAp_applicative  = ./FreeAp_applicative.av
+let liftFreeAp  = ./liftFreeAp.av
+let retractFreeAp  = ./retractFreeAp.av
+let standardProviders
+ = 
+  ''
+  provider "aws" {
+    region  = "eu-west-1"
+    version = "= 1.54.0"
+    profile = "default"
+  }
+  provider "null" {
+    version = "= 1.0"
+  }
+  provider "external" {
+    version = "= 1.0.0"
+  }
+  provider "random" {
+    version = "= 2.0.0"
+  }
+  ''
+
+in
+standardProviders

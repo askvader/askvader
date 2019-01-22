@@ -1,0 +1,11 @@
+
+-- FOO
+--
+-- BAR
+
+
+let concatMap
+ =  ../vendor/dhall-lang/Prelude/Text/concatMap
+
+in
+concatMap

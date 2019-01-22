@@ -1,0 +1,71 @@
+
+
+
+--
+-- NOTE [Safe attributes]
+--
+-- Functions like unsafeTextAttr assume that the given string represents a valid attribute
+-- of the given type (e.g. Text in the case of unsafeTextAttr). The user should not be allowed
+-- to specify this.
+--
+-- We could solve this by fake-GADTS, by making the library a function of (attr : Type -> Type)
+-- and a record {fooAttr : attr Text, barAttr : attr Natural}
+--
+-- Full example
+--
+--    let --      Id = \(a : Type) → a
+--    in let --      Const = \(a : Type) → \(b : Type) → a
+--    in
+--
+--    (\(f:Type -> Type) ->
+--     \(attrs : { foo : f Natural, bar : f Text }) ->
+--     attrs.bar
+--    )
+--    (Const Text)
+--    {foo = "fooAttr", bar = "barAttr"}
+--
+
+
+-- NOTE [PrimAttrs]
+-- A "unityped" set of Terraform return values.
+--
+-- This type is part of the [Evaluator Protocol], see that note.
+
+let concatMap  = ./concatMap.av
+let generate  = ./generate.av
+let Functor  = ./Functor.av
+let List_functor  = ./List_functor.av
+let Applicative  = ./Applicative.av
+let liftA2  = ./liftA2.av
+let Coyoneda  = ./Coyoneda.av
+let liftCoyoneda  = ./liftCoyoneda.av
+let mapCoyoneda  = ./mapCoyoneda.av
+let T  = ./T.av
+let TT  = ./TT.av
+let Free1  = ./Free1.av
+let FreeAp  = ./FreeAp.av
+let FreeAp_functor  = ./FreeAp_functor.av
+let FreeAp_applicative  = ./FreeAp_applicative.av
+let liftFreeAp  = ./liftFreeAp.av
+let retractFreeAp  = ./retractFreeAp.av
+let standardProviders  = ./standardProviders.av
+let standardAwsOptions  = ./standardAwsOptions.av
+let nixPre  = ./nixPre.av
+let AwsAttribute : Type = ./AwsAttribute.av
+let typeOf  = ./typeOf.av
+let CannedACL : Type = ./CannedACL.av
+let VersioningOptions : Type = ./VersioningOptions.av
+let S3BucketR : Type = ./S3BucketR.av
+let Blob : Type = ./Blob.av
+let S3BucketObjectSource : Type = ./S3BucketObjectSource.av
+let S3BucketObjectR : Type = ./S3BucketObjectR.av
+let Monoid  = ./Monoid.av
+let Const  = ./Const.av
+let Const_functor  = ./Const_functor.av
+let Const_applicative  = ./Const_applicative.av
+let AwsInstanceConfig : Type = ./AwsInstanceConfig.av
+let PrimAttr
+ : Type =  <N:Natural | T:Text>
+
+in
+PrimAttr

@@ -1,0 +1,9 @@
+
+let concatMap  = ./concatMap.av
+let generate  = ./generate.av
+let Functor  = ./Functor.av
+let List_functor
+ =  ../vendor/dhall-bhat/List/functor
+
+in
+List_functor

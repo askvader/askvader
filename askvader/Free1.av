@@ -1,0 +1,19 @@
+-- Free objects of kind (Type -> Type) using final encoding
+
+let concatMap  = ./concatMap.av
+let generate  = ./generate.av
+let Functor  = ./Functor.av
+let List_functor  = ./List_functor.av
+let Applicative  = ./Applicative.av
+let liftA2  = ./liftA2.av
+let Coyoneda  = ./Coyoneda.av
+let liftCoyoneda  = ./liftCoyoneda.av
+let mapCoyoneda  = ./mapCoyoneda.av
+let T  = ./T.av
+let TT  = ./TT.av
+let Free1
+ =  \(class : TT -> T) -> \(f:TT) -> \(a:T) ->
+  forall (g:TT) -> class g -> (forall (x:T) -> f x -> g x) -> g a
+
+in
+Free1

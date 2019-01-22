@@ -1,3 +1,0 @@
-
-let cloud = ./cloud.av
-in cloud.run cloud.test

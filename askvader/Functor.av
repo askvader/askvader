@@ -1,0 +1,8 @@
+
+let concatMap  = ./concatMap.av
+let generate  = ./generate.av
+let Functor
+ =  ../vendor/dhall-bhat/Functor/Type
+
+in
+Functor

@@ -131,6 +131,17 @@ let awsInstanceToInput
         ]
       }
       ''
+    let autoscalingBlock =
+      ''
+# Create launch configuration
+as-create-launch-config app-as-cfg_sm --image-id ami-05dd5c6c --instance-type m1.small --group app-sg --key myapp-prod-key
+
+# Make an autoscaling group of one instance with the launch config
+as-create-auto-scaling-group app-as-grp --launch-configuration app-as-cfg_sm --min-size 1 --max-size 1 --default-cooldown 120 --grace-period 300 --tag "k=Name, v=MyApp-Autoscale, p=true"
+
+# Subscribe to all the autoscaling events so I know what's going on.
+as-put-notification-configuration --topic-arn $SNS --auto-scaling-group 'app-as-grp' --notification-types autoscaling:EC2_INSTANCE_LAUNCH, autoscaling:EC2_INSTANCE_TERMINATE, autoscaling:EC2_INSTANCE_TERMINATE_ERROR, autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+      ''
     in
     { tfCodeBefore =
     ''
@@ -231,9 +242,20 @@ EOF
 }
 
 
+
+-- TODO split out all of this into a bare AwsLaunchConfig type + renderer
+-- Copy instance behaviour but use user_data instead of provisioners
+resource "aws_launch_configuration" "${name}-conf" {
+  name_prefix   = "${name}-conf-"
+  image_id      = "${standardAwsOptions.ami}"
+  instance_type = "${standardAwsOptions.instanceType}"
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+
           resource "aws_instance" "${name}" {
-            ami             = "${standardAwsOptions.ami}"
-            instance_type   = "${standardAwsOptions.instanceType}"
             key_name        = "${standardAwsOptions.keyName}"
             security_groups = ["standard"]
             tags {

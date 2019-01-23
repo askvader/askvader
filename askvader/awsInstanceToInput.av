@@ -148,7 +148,7 @@ let awsInstanceToInput
               {
               }
           }
-          // TODO do not duplicate the key pair/security group blocks
+          // TODO do not duplicate the key pair/security group/IAM role/instance profile blocks
           // TODO more restrictive ingress by default
           resource "aws_key_pair" "${standardAwsOptions.keyName}" {
             key_name   = "${standardAwsOptions.keyName}"
@@ -176,6 +176,60 @@ let awsInstanceToInput
               cidr_blocks     = ["0.0.0.0/0"]
             }
           }
+
+
+resource "aws_iam_role" "${name}-role" {
+    name = "${name}-role"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "${name}-instance-profile" {
+    name = "${name}-instance-profile"
+    roles = ["${name}-role"]
+}
+
+resource "aws_iam_role_policy" "${name}-policy" {
+  name = "${name}-policy"
+  role = "''${aws_iam_role.${name}-role.id}"
+  // TODO more restrictive policy
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::bucket-name"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": ["arn:aws:s3:::bucket-name/*"]
+    }
+  ]
+}
+EOF
+}
+
+
           resource "aws_instance" "${name}" {
             ami             = "${standardAwsOptions.ami}"
             instance_type   = "${standardAwsOptions.instanceType}"
@@ -187,6 +241,8 @@ let awsInstanceToInput
             root_block_device {
               volume_size = ${Natural/show standardAwsOptions.rootBlockDeviceVolumeSize.gigabytes}
             }
+            iam_instance_profile = "''${aws_iam_instance_profile.${name}-profile.id}"
+
           }
           resource "null_resource" "${name}-prov" {
             triggers {

@@ -122,11 +122,12 @@ let awsInstanceToInput
         ]
       }
       ''
+    let bucketName = "aw-test-1831872837187287"
     let copyS3OnLaunchBlock =
       ''
       provisioner "remote-exec" {
         inline = [
-        "/root/.local/bin/aws s3api get-object --bucket aw-test-1831872837187287 --key data index.html"
+        "/root/.local/bin/aws s3api get-object --bucket ${bucketName} --key data index.html"
         ]
       }
       ''
@@ -213,7 +214,7 @@ resource "aws_iam_role_policy" "${name}-policy" {
     {
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": ["arn:aws:s3:::bucket-name"]
+      "Resource": ["arn:aws:s3:::${bucketName}"]
     },
     {
       "Effect": "Allow",
@@ -222,7 +223,7 @@ resource "aws_iam_role_policy" "${name}-policy" {
         "s3:GetObject",
         "s3:DeleteObject"
       ],
-      "Resource": ["arn:aws:s3:::bucket-name/*"]
+      "Resource": ["arn:aws:s3:::${bucketName}/*"]
     }
   ]
 }

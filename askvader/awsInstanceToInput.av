@@ -107,6 +107,29 @@ let awsInstanceToInput
       ''
       ${../vendor/dhall-lang/Prelude/Text/concatMapSep ", " Text wrapAttr (getAttrNames instance.config)}
       ''
+
+    -- TODO some rather ad-hoc provisioners
+    -- Install AWS CLI according to AWS manual
+    let setupAwsCliBlock =
+      ''
+      provisioner "remote-exec" {
+        inline = [<<END_B12834A71827
+          nix-env -iA nixos.python
+          curl -O https://bootstrap.pypa.io/get-pip.py
+          python get-pip.py --user
+          /root/.local/bin/pip install awscli --upgrade --user
+      END_B12834A71827
+        ]
+      }
+      ''
+    let copyS3OnLaunchBlock =
+      ''
+      provisioner "remote-exec" {
+        inline = [
+        "/root/.local/bin/aws s3api get-object --bucket aw-test-1831872837187287 --key data index.html"
+        ]
+      }
+      ''
     in
     { tfCodeBefore =
     ''
@@ -194,6 +217,8 @@ let awsInstanceToInput
                 "nixos-rebuild switch"
               ]
             }
+            ${setupAwsCliBlock}
+            ${copyS3OnLaunchBlock}
           }
     ''
     , attrNames = getAttrNames instance.config

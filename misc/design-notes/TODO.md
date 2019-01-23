@@ -1,4 +1,3 @@
-TODO upload text to S3
 TODO make instance read from S3 (using CLI)
 TODO restart an instance on failure (4 min outage OK)
 TODO restrict a bucket to a VCP, single user write (create user!) and read acc. to single instance

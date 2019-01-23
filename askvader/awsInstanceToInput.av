@@ -199,7 +199,7 @@ EOF
 
 resource "aws_iam_instance_profile" "${name}-instance-profile" {
     name = "${name}-instance-profile"
-    roles = ["${name}-role"]
+    role = "${name}-role"
 }
 
 resource "aws_iam_role_policy" "${name}-policy" {
@@ -241,7 +241,7 @@ EOF
             root_block_device {
               volume_size = ${Natural/show standardAwsOptions.rootBlockDeviceVolumeSize.gigabytes}
             }
-            iam_instance_profile = "''${aws_iam_instance_profile.${name}-profile.id}"
+            iam_instance_profile = "''${aws_iam_instance_profile.${name}-instance-profile.id}"
 
           }
           resource "null_resource" "${name}-prov" {

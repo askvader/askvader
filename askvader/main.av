@@ -94,6 +94,7 @@ let maybeToList  = ./maybeToList.av
 let catMaybes  = ./catMaybes.av
 let resourceToInput  = ./resourceToInput.av
 let foo  = ./foo.av
+let CannedAcl = ./CannedACL.av
 let main
 =
 { run
@@ -115,13 +116,21 @@ let main
             (unsafeNatAttr "random_integer.foo.result")
             (unsafeTextAttr "random_string.bar.result")
       }
-  , AwsResource.AwsEKSCluster
-     { name = "demo-cluster"
-     , roleArn = "TODO-DUMMY-NOT-USED"
-     , vpcConfig =
-       { subnetIds = ["TODO-DUMMY"]
-       }
-     }
+  -- , AwsResource.AwsEKSCluster
+  --    { name = "demo-cluster"
+  --    , roleArn = "TODO-DUMMY-NOT-USED"
+  --    , vpcConfig =
+  --      { subnetIds = ["TODO-DUMMY"]
+  --      }
+  --    }
+
+  , AwsResource.S3Bucket
+    { resourceName = "aw-test-bucket"
+    , bucketName = None Text
+    , acl = Some (CannedAcl.PublicRead {=}) -- TODO switch to private
+    , versioning = Some { mfaDelete = False }
+    }
+
   ]
 }
 

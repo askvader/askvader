@@ -99,6 +99,32 @@ let awsInstanceToInput  = ./awsInstanceToInput.av
 let pureAttr  = ./pureAttr.av
 let maybeToList  = ./maybeToList.av
 let catMaybes  = ./catMaybes.av
+
+let showPolicy = \(x : CannedACL) ->
+  let t = merge
+  { Private = \(x:{}) -> "private"
+  , PublicRead = \(x:{}) -> "public-read"
+  , PublicReadWrite = \(x:{}) -> "public-read-write"
+  }
+  x
+  in "acl = \"${t}\""
+
+let showVersioning = \(x : VersioningOptions) ->
+  if x.mfaDelete
+    then
+    ''
+    versioning {
+      enabled = true
+      mfa_delete = true
+    }
+    ''
+    else
+    ''
+    versioning {
+      enabled = true
+    }
+    ''
+
 let resourceToInput
 
   : AwsResource -> Optional EvaluatorInput
@@ -119,7 +145,15 @@ let resourceToInput
         length     = ${Natural/show x.length}
       }
       '')
-    , S3Bucket = \(x : S3BucketR) -> None EvaluatorInput
+    , S3Bucket = \(x : S3BucketR) -> Some (staticInput
+      ''
+      resource "aws_s3_bucket" "${x.resourceName}" {
+        ${Optional/fold Text x.bucketName Text (\(name : Text) -> "bucket = \"" ++ name ++ "\"") ""}
+        ${Optional/fold CannedACL x.acl Text showPolicy  ""}
+        ${Optional/fold VersioningOptions x.versioning Text showVersioning ""}
+      }
+      ''
+      )
     , S3BucketObject = \(x : S3BucketObjectR) -> None EvaluatorInput
     , AwsIAMUser = \(x : AwsIAMUserR) -> None EvaluatorInput
     , AwsIAMGroup = \(x : AwsIAMGroupR) -> None EvaluatorInput

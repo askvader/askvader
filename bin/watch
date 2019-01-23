@@ -1,1 +1,1 @@
-fswatch *.av askvader/*.av | xargs -n1 sh -c 'bin/check'
+fswatch *.av askvader/*.av | xargs -n1 sh -c 'bin/check test.av'

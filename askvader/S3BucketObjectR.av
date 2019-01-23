@@ -28,8 +28,9 @@ let S3BucketR : Type = ./S3BucketR.av
 let Blob : Type = ./Blob.av
 let S3BucketObjectSource : Type = ./S3BucketObjectSource.av
 let S3BucketObjectR
- : Type = 
+ : Type =
   { bucketName : Text
+  , resourceName : Text
   , key : Text
   , source : S3BucketObjectSource
   }

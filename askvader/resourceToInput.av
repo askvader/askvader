@@ -154,7 +154,16 @@ let resourceToInput
       }
       ''
       )
-    , S3BucketObject = \(x : S3BucketObjectR) -> None EvaluatorInput
+    , S3BucketObject = \(x : S3BucketObjectR) -> Some (staticInput
+      ''
+      resource "aws_s3_bucket_object" "${x.resourceName}" {
+        bucket = "${x.bucketName}"
+        key = "${x.key}"
+        // TODO
+        source = "README.md"
+      }
+      ''
+      )
     , AwsIAMUser = \(x : AwsIAMUserR) -> None EvaluatorInput
     , AwsIAMGroup = \(x : AwsIAMGroupR) -> None EvaluatorInput
     , AwsIAMRole = \(x : AwsIAMRoleR) -> None EvaluatorInput

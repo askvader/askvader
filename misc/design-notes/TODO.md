@@ -15,6 +15,7 @@ TODO make lambda function restart instance on change to bucket
 
 ---
 TODO try the AWS queue/pubsub systems with Lambda/Fargate, or try both as a backend for Fully Serverless
+TODO try deploying Core/Dhall functions to EC2/Fargate/Lambda (e.g. return a non-Serializable value from Conf)
 
 TODO make use of the following Kubernetes networking notes
    A kub cluster is a set of machines on a private network running nodes (controllers and workers). Each worker maintains a collection of pods (sets of containers with shared networking/disk, basically virtual computers with a set of services).

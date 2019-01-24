@@ -105,6 +105,10 @@ let main
 , test =
   [ AwsResource.RandomInteger { name = "foo", min = 1, max = 10, seed = None Natural }
   , AwsResource.RandomString { name = "bar", length = 5 }
+  , AwsResource.AwsLaunchConfiguration
+    {=}
+  , AwsResource.AwsAutoscalingGroup
+    {=}
   , AwsResource.AwsInstance
       { name = "x"
       , staticFiles = noFiles
@@ -118,8 +122,8 @@ let main
       }
   -- , AwsResource.AwsEKSCluster
   --    { name = "demo-cluster"
-  --    , roleArn = "TODO-DUMMY-NOT-USED"
-  --    , vpcConfig =
+    --    , roleArn = "TODO-DUMMY-NOT-USED"
+      --    , vpcConfig =
   --      { subnetIds = ["TODO-DUMMY"]
   --      }
   --    }

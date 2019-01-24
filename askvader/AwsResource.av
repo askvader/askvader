@@ -61,11 +61,15 @@ let AwsIAMRoleR : Type = ./AwsIAMRoleR.av
 let AwsIAMPolicyR : Type = ./AwsIAMPolicyR.av
 let AwsSubnetR : Type = ./AwsSubnetR.av
 let AwsEKSClusterR : Type = ./AwsEKSClusterR.av
+let AwsAutoscalingGroupR : Type = ./AwsAutoscalingGroupR.av
+let AwsLaunchConfigurationR : Type = ./AwsLaunchConfigurationR.av
 let RandomIntegerR : Type = ./RandomIntegerR.av
 let RandomStringR : Type = ./RandomStringR.av
 let AwsResource
- : Type = 
+ : Type =
   < AwsInstance : AwsInstanceR
+  | AwsLaunchConfiguration : AwsLaunchConfigurationR
+  | AwsAutoscalingGroup : AwsAutoscalingGroupR
   | S3Bucket : S3BucketR
   | S3BucketObject : S3BucketObjectR
   | AwsIAMUser : AwsIAMUserR

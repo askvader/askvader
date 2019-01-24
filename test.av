@@ -1,3 +1,10 @@
 
-let cloud = ./askvader/main.av
-in cloud.run cloud.test
+
+
+let TerraformF
+  : Type -> Type
+  = \(a : Type) ->
+  < AwsInstance : {}
+  >
+
+in {=}

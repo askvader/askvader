@@ -99,6 +99,12 @@ let awsInstanceToInput  = ./awsInstanceToInput.av
 let pureAttr  = ./pureAttr.av
 let maybeToList  = ./maybeToList.av
 let catMaybes  = ./catMaybes.av
+let AwsAutoscalingGroupR = ./AwsAutoscalingGroupR.av
+let AwsLaunchConfigurationR = ./AwsLaunchConfigurationR.av
+let AwsSnsTopicR = {}
+let AwsSqsQueueR = {}
+let AwsLambdaFunctionR = {}
+let AwsSecurityGroupR = {}
 
 let showPolicy = \(x : CannedACL) ->
   let t = merge
@@ -169,6 +175,12 @@ let resourceToInput
     , AwsIAMRole = \(x : AwsIAMRoleR) -> None EvaluatorInput
     , AwsIAMPolicy = \(x : AwsIAMPolicyR) -> None EvaluatorInput
     , AwsSubnet = \(x : AwsSubnetR) -> None EvaluatorInput
+    , AwsAutoscalingGroup = \(x : AwsAutoscalingGroupR) -> None EvaluatorInput
+    , AwsLaunchConfiguration = \(x : AwsLaunchConfigurationR) -> None EvaluatorInput
+    , AwsSnsTopic = \(x : AwsSnsTopicR) -> None EvaluatorInput
+    , AwsSqsQueue = \(x : AwsSqsQueueR) -> None EvaluatorInput
+    , AwsLambdaFunction = \(x : AwsLambdaFunctionR) -> None EvaluatorInput
+    , AwsSecurityGroup = \(x : AwsSecurityGroupR) -> None EvaluatorInput
     , AwsEKSCluster = \(x : AwsEKSClusterR) ->
       let clusterName = "fruktsallad"
       in

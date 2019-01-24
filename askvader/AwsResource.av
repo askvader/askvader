@@ -1,5 +1,5 @@
 
--- TODO not all of these are AWS resources, move to separate type...
+-- TODO not all of these are AWS resources, move to separate Resource type
 -- NOTE [Source vs Data] We're not distinguishing resource/data_source a la Terraform
 -- Convention is: All TF data sources are suffixed with 'Data'
 
@@ -65,6 +65,10 @@ let AwsAutoscalingGroupR : Type = ./AwsAutoscalingGroupR.av
 let AwsLaunchConfigurationR : Type = ./AwsLaunchConfigurationR.av
 let RandomIntegerR : Type = ./RandomIntegerR.av
 let RandomStringR : Type = ./RandomStringR.av
+let AwsSnsTopicR = {}
+let AwsSqsQueueR = {}
+let AwsLambdaFunctionR = {}
+let AwsSecurityGroupR = {}
 let AwsResource
  : Type =
   < AwsInstance : AwsInstanceR
@@ -78,8 +82,15 @@ let AwsResource
   | AwsIAMPolicy : AwsIAMPolicyR
   | AwsSubnet : AwsSubnetR
   | AwsEKSCluster : AwsEKSClusterR
+
   | RandomInteger : RandomIntegerR
   | RandomString : RandomStringR
+
+  | AwsLambdaFunction : AwsLambdaFunctionR
+
+  | AwsSecurityGroup : AwsSecurityGroupR
+  | AwsSnsTopic : AwsSnsTopicR
+  | AwsSqsQueue : AwsSqsQueueR
   >
 
 in

@@ -1,9 +1,9 @@
 
 - For some (non-function?) type S, define a service infrastructure as
 
-  type ReadReqH = HttpRequest -> S -> HttpResponse
-  type WriteReqH = HttpRequest -> S -> (S, HttpResponse)
-  type Service = List <R : ReadReqH | W: WriteReqH >
+        type ReadReqH = HttpRequest -> S -> HttpResponse
+        type WriteReqH = HttpRequest -> S -> (S, HttpResponse)
+        type Services = Map String <R : ReadReqH | W: WriteReqH >
 
 - What happens on conflicting/simultaneous write requests?
   - We could allow the user to define a merge function (S -> S -> S)
@@ -11,8 +11,14 @@
   - We could ask the user to retry
 
 - Replacing the unityped HttpRequest/HttpResponse
+  - Instead of HttpRequest/HttpResponse, allow client to choose types A and B (in addition to S)
+  
+        type ReadReqH = A -> S -> B
+        type WriteReqH = A -> S -> (S, B)
+        type Services = Map String <R : ReadReqH | W: WriteReqH >
+ 
 - Adding other (non-HTTP) communication channels
-  - Same as above
+  - Similar to the above
 
 - Allow returning responses that include functions
   - Typical use case: UI, e.g:

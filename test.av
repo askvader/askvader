@@ -42,8 +42,10 @@ let apT
 -- have unique names
 
 in
--- NOTE 'demote' should be thought of as a special which normalizes
--- to the Dhall representation of the argument
+-- Idea: as a generalization of te current [Evaluator Protocol], add
+-- a single languag prim 'demote' normalizes arbitrary expressions
+-- whose type has kind Type to Text: namely the Dhall code representation
+-- of their normal form
 --
 -- TODO will free variables cause problems?
 --    For example when normalizing?
@@ -60,7 +62,7 @@ in
 --
 --      demote Natural (2 + 2)
 --    normalizes to
---      '4'
+--      "4"
 --    and
 --      demote (Natural -> Natural) (\(x:Natural) -> x)
 --    normalizes to

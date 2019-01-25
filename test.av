@@ -1,10 +1,82 @@
 
+let Const = ./askvader/Const.av
+let FreeAp = ./askvader/FreeAp.av
+let liftFreeAp = ./askvader/liftFreeAp.av
+let T = Type
 
-
+-- Enumerate supported TF resources§
+let TF =
+  < AwsInstance : {}
+  | Random : {}
+  >
+-- Type constructor representing a subset of terraform resources
+-- TODO should be abstract
 let TerraformF
   : Type -> Type
-  = \(a : Type) ->
-  < AwsInstance : {}
-  >
+  = Const { name : Text, constr : TF }
+let Terraform = FreeAp TerraformF
+let Terraform_applicative = ./askvader/FreeAp_applicative.av TerraformF
 
-in {=}
+-- NOTE these constructors can choose freely because
+-- it "knows" that (Terraform) is the same as (Const {...,TF})
+-- Hence, we should hide these from the user
+-- let awsInstance
+--   : Text -> Terraform (Natural -> Natural)
+--   = \(x : Text) ->
+--     liftFreeAp TerraformF (Natural -> Natural)
+--       { name = x, constr = TF.AwsInstance {=} }
+let random
+  : Text -> Terraform (Natural -> Natural -> Natural)
+  = \(name : Text) ->
+    liftFreeAp TerraformF (Natural -> Natural -> Natural)
+      { name = name, constr = TF.Random {=} }
+
+let mapT = (./askvader/FreeAp_functor.av TerraformF).map
+let pureT = Terraform_applicative.pure
+let apT
+  : forall (a:T) -> forall (b:T) ->
+    Terraform (a -> b) -> Terraform a -> Terraform b
+  = Terraform_applicative.ap
+
+-- TODO function (Terraform a -> Terraform a) that assures all resources
+-- have unique names
+
+in
+-- NOTE 'demote' should be thought of as a special which normalizes
+-- to the Dhall representation of the argument
+--
+-- TODO will free variables cause problems?
+--    For example when normalizing?
+--      \(x:Natural) -> demote (2 + x)
+--    Actually this is fine, it is already in normal form
+--
+--    Similarly
+--      \(x:Natural) -> demote (2 + 2 + x)
+--    normalizes to
+--      \(x:Natural) -> demote (4 + x)
+--
+--    However, any 'demote' referring to a closed expression (e.g. with no FVs)
+--    normalizes to the text representation of that expression.
+--
+--      demote Natural (2 + 2)
+--    normalizes to
+--      '4'
+--    and
+--      demote (Natural -> Natural) (\(x:Natural) -> x)
+--    normalizes to
+--      "(\\x:Natural) -> x)"
+\(demote : forall (a : Type) -> a -> Text) ->
+
+let toTF
+  : Terraform {} -> Text
+  = \(tf : Terraform {}) ->
+  "TODO"
+
+let test
+  : Text
+  = toTF
+    (mapT Natural {} (\(x:Natural)->{=}) (apT Natural Natural
+      (apT Natural (Natural -> Natural) (random "a") (pureT Natural 1))
+      (pureT Natural 2)))
+in
+{=}
